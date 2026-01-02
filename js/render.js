@@ -1,35 +1,46 @@
-const SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTj4mIQNaRGqy8JbMyAHjDnQH-BbAry72Mtqrt3oxVvp8buPELwwgfHXlb7eBRHBOsAZ010z8Sl5Vd5/pub?gid=0&single=true&output=csv";
-const container = document.getElementById("book-timeline");
+const SHEET_CSV_URL = "PASTE_YOUR_CSV_URL_HERE";
+const container = document.getElementById("timeline-map");
 
-/* 
-  1. Fetch the Google Sheet
-*/
-fetch(SHEET_CSV_URL)
-  .then(res => res.text())
-  .then(text => {
-    const rows = text.trim().split("\n");
-    const headers = rows.shift().split(",");
+const skipColumns = ["step_id", "Dead", "Book", "Order", "Notes"];
+const codeColors = {};
+const colorPalette = [
+  "#FF6B6B","#4ECDC4","#FFD93D","#6A4C93",
+  "#FFA500","#00CED1","#FF69B4","#32CD32"
+];
+let colorIndex = 0;
 
-    const timelineData = rows.map(row => {
-      const values = row.split(",");
-      const obj = {};
-      headers.forEach((h, i) => {
-        obj[h] = values[i] ? values[i].trim() : "";
+function getColorForCode(code) {
+  if (!codeColors[code]) {
+    codeColors[code] = colorPalette[colorIndex % colorPalette.length];
+    colorIndex++;
+  }
+  return codeColors[code];
+}
+
+/* Ensure DOM exists before running */
+document.addEventListener("DOMContentLoaded", () => {
+
+  fetch(SHEET_CSV_URL)
+    .then(res => res.text())
+    .then(text => {
+      const rows = text.trim().split("\n");
+      const headers = rows.shift().split(",");
+
+      const timelineData = rows.map(row => {
+        const values = row.split(",");
+        const obj = {};
+        headers.forEach((h, i) => {
+          obj[h] = values[i] ? values[i].trim() : "";
+        });
+        return obj;
       });
-      return obj;
-    });
 
-    /* 
-      2. Now that data exists, render it
-    */
-    renderTimeline(timelineData);
-  });
+      renderTimeline(timelineData);
+    })
+    .catch(err => console.error("Failed to load timeline data:", err));
+});
 
-/*
-  3. ALL your old rendering logic lives here
-*/
 function renderTimeline(TIMELINE_DATA) {
-
   const knownDead = new Set();
   const lastSeenLocation = {};
 
@@ -37,10 +48,7 @@ function renderTimeline(TIMELINE_DATA) {
 
     const stepEl = document.createElement("section");
     stepEl.className = "timeline-step";
-
-    stepEl.innerHTML = `
-      <div class="step-label">Step ${step.step_id}</div>
-    `;
+    stepEl.innerHTML = `<div class="step-label">Step ${step.step_id}</div>`;
 
     const row = document.createElement("div");
     row.className = "location-row";
@@ -52,10 +60,10 @@ function renderTimeline(TIMELINE_DATA) {
     newlyDead.forEach(d => knownDead.add(d));
 
     Object.entries(step).forEach(([location, value]) => {
-      if (["step_id", "Dead"].includes(location)) return;
+      if (skipColumns.includes(location)) return;
       if (!value) return;
 
-      const characters = value.split(",").map(s => s.trim());
+      const characters = value.split(",").map(s => s.trim()).filter(Boolean);
       characters.forEach(c => lastSeenLocation[c] = location);
 
       const living = characters.filter(c => !knownDead.has(c));
@@ -63,7 +71,6 @@ function renderTimeline(TIMELINE_DATA) {
 
       const loc = document.createElement("div");
       loc.className = "location-box";
-
       loc.innerHTML = `<div class="location-title">${location}</div>`;
 
       const badges = document.createElement("div");
@@ -73,19 +80,17 @@ function renderTimeline(TIMELINE_DATA) {
         const hex = document.createElement("div");
         hex.className = "hex";
         hex.textContent = c;
+        hex.style.backgroundColor = getColorForCode(c);
         badges.appendChild(hex);
       });
 
       loc.appendChild(badges);
 
       const ripHere = newlyDead.filter(d => lastSeenLocation[d] === location);
-
-      if (ripHere.length) {
+      if (ripHere.length > 0) {
         const rip = document.createElement("div");
         rip.className = "rip";
-
         rip.innerHTML = `<div class="rip-label">RIP:</div>`;
-
         const ripBadges = document.createElement("div");
         ripBadges.className = "badges";
 
@@ -93,6 +98,7 @@ function renderTimeline(TIMELINE_DATA) {
           const hex = document.createElement("div");
           hex.className = "hex";
           hex.textContent = d;
+          hex.style.backgroundColor = "#6b6f8f"; // gray
           ripBadges.appendChild(hex);
         });
 
