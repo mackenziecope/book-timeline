@@ -3,13 +3,20 @@
 <head>
   <meta charset="UTF-8">
   <title>Throne of Glass Timeline</title>
-  <link rel="stylesheet" href="css/timeline.css">        <!-- Generic layout -->
-  <link rel="stylesheet" href="css/throne-of-glass.css"> <!-- Dataset-specific styles -->
+
+  <link rel="stylesheet" href="css/timeline.css">
+  <link rel="stylesheet" href="css/throne-of-glass.css">
+
+  <!-- CSV parser -->
+  <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
 </head>
 <body>
+
+  <!-- SVG overlay for hybrid flow lines -->
+  <svg id="flow-layer"></svg>
+
   <div id="timeline-map"></div>
-  <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
-  <script src="js/render.js"></script>
+
   <script src="js/render.js"></script>
 </body>
 </html>
