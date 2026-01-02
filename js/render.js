@@ -1,7 +1,6 @@
 const SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTj4mIQNaRGqy8JbMyAHjDnQH-BbAry72Mtqrt3oxVvp8buPELwwgfHXlb7eBRHBOsAZ010z8Sl5Vd5/pub?gid=0&single=true&output=csv";
 
 const container = document.getElementById("timeline-map");
-
 const NON_LOCATION_FIELDS = ["Book", "step_id", "Order", "Notes", "Dead"];
 
 /* --- Factions --- */
@@ -10,10 +9,8 @@ const FACTIONS = {
   adarlan: { color: "#C62828" },
   neutral: { color: "#777" }
 };
-
 const DEFAULT_FACTION = {};
 const FACTION_OVERRIDES = {};
-
 function getFaction(character, stepId) {
   return (
     FACTION_OVERRIDES[stepId]?.[character] ||
@@ -22,7 +19,7 @@ function getFaction(character, stepId) {
   );
 }
 
-/* --- Track RIP badges to show only once --- */
+/* --- Track RIP badges --- */
 const renderedDeaths = new Set();
 
 /* --- Book labels --- */
@@ -77,8 +74,8 @@ function renderTimeline(data) {
         ? step.Dead.replace(/"/g, "").split(",").map(v => v.trim()).filter(Boolean)
         : [];
 
-      // Only render box if there are characters or new deaths
-      const shouldRenderBox = chars.length > 0 || deadChars.some(c => !renderedDeaths.has(c));
+      const newDead = deadChars.filter(code => !renderedDeaths.has(code));
+      const shouldRenderBox = chars.length > 0 || newDead.length > 0;
       if (!shouldRenderBox) return;
 
       const box = document.createElement("div");
@@ -102,25 +99,27 @@ function renderTimeline(data) {
         box.appendChild(badges);
       }
 
- // RIP badges
-if (deadChars.length) {
-  const newDead = deadChars.filter(code => !renderedDeaths.has(code));
-  if (newDead.length) {
-    const ripDiv = document.createElement("div");
-    ripDiv.className = "rip-line";
-    ripDiv.innerHTML = `<span>RIP:</span>`;
+      // RIP badges
+      if (newDead.length) {
+        const ripDiv = document.createElement("div");
+        ripDiv.className = "rip-line";
+        ripDiv.innerHTML = `<span>RIP:</span>`;
 
-    newDead.forEach(code => {
-      const ripBadge = document.createElement("div");
-      ripBadge.className = "hex rip";
-      ripBadge.textContent = code;
-      ripDiv.appendChild(ripBadge);
-      renderedDeaths.add(code);
+        newDead.forEach(code => {
+          const ripBadge = document.createElement("div");
+          ripBadge.className = "hex rip";
+          ripBadge.textContent = code;
+          ripDiv.appendChild(ripBadge);
+          renderedDeaths.add(code);
+        });
+
+        box.appendChild(ripDiv);
+      }
+
+      row.appendChild(box);
     });
 
-    box.appendChild(ripDiv);
-  }
-}
+    stepEl.appendChild(row);
 
     // Notes field
     if (step.Notes && step.Notes.trim() !== "") {
