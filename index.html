@@ -3,20 +3,24 @@
 <head>
   <meta charset="UTF-8">
   <title>Throne of Glass Timeline</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
+  <!-- CSS -->
   <link rel="stylesheet" href="css/timeline.css">
   <link rel="stylesheet" href="css/throne-of-glass.css">
-
-  <!-- CSV parser -->
-  <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
 </head>
 <body>
 
-  <!-- SVG overlay for hybrid flow lines -->
-  <svg id="flow-layer"></svg>
+  <h1>Throne of Glass Timeline</h1>
 
+  <!-- Timeline container -->
   <div id="timeline-map"></div>
 
+  <!-- Local PapaParse -->
+  <script src="js/papaparse.min.js"></script>
+
+  <!-- Timeline rendering -->
   <script src="js/render.js"></script>
+
 </body>
 </html>
