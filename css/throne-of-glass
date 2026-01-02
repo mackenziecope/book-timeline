@@ -1,10 +1,85 @@
-/* Example character-specific colors */
-.hex[data-character="A"] { background-color: #FF6B6B; }   /* Aelin */
-.hex[data-character="R"] { background-color: #4ECDC4; }   /* Rowan */
-.hex[data-character="C"] { background-color: #FFD93D; }   /* Chaol */
-.hex[data-character="DOR"] { background-color: #6A4C93; }   /* Dorian */
-.hex[data-character="EL"] { background-color: #FFA500; }   /* Elide */
+/* Timeline Step */
+.timeline-step {
+  margin: 40px 0;
+  position: relative;
+}
 
-/* Example type-based badges (future-proof) */
-.hex[data-type="army"] { border: 2px dashed gold; }
-.hex[data-type="vip"] { border: 2px solid white; }
+/* Book label */
+.step-label {
+  font-size: 1.5em;
+  font-weight: bold;
+  margin-bottom: 15px;
+}
+
+/* Row of locations */
+.location-row {
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+/* Location box */
+.location-box {
+  border: 2px solid #333;
+  border-radius: 8px;
+  padding: 10px;
+  min-width: 100px;
+  position: relative;
+}
+
+/* Location title */
+.location-title {
+  font-weight: bold;
+  margin-bottom: 6px;
+}
+
+/* Badges container */
+.badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+
+/* Normal badge */
+.hex {
+  width: 30px;
+  height: 30px;
+  background-color: #777;
+  clip-path: polygon(
+    25% 0%, 75% 0%, 
+    100% 50%, 75% 100%, 
+    25% 100%, 0% 50%
+  );
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.8em;
+  color: white;
+}
+
+/* RIP badge */
+.hex.rip {
+  width: 15px;
+  height: 15px;
+  background-color: #999;
+  color: #333;
+  font-size: 0.6em;
+}
+
+/* RIP line */
+.rip-line {
+  margin-top: 5px;
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 0.8em;
+  color: #555;
+}
+
+/* Notes field */
+.step-notes {
+  margin-top: 8px;
+  font-style: italic;
+  font-size: 0.9em;
+  color: #444;
+}
