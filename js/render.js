@@ -1,7 +1,6 @@
 const SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTj4mIQNaRGqy8JbMyAHjDnQH-BbAry72Mtqrt3oxVvp8buPELwwgfHXlb7eBRHBOsAZ010z8Sl5Vd5/pub?gid=0&single=true&output=csv";
 
 const container = document.getElementById("timeline-map");
-const svg = document.getElementById("flow-layer");
 
 const NON_LOCATION_FIELDS = ["Book", "step_id", "Order", "Notes", "Dead"];
 
@@ -23,11 +22,10 @@ function getFaction(character, stepId) {
   );
 }
 
-/* --- Character tracking --- */
-const characterHistory = {};
+/* --- Track RIP badges to show only once --- */
 const renderedDeaths = new Set();
 
-/* --- Book labels table --- */
+/* --- Book labels --- */
 const BOOK_LABELS = {
   0: "0 - Assassin's Blade",
   1: "1 - Throne of Glass",
@@ -38,7 +36,7 @@ const BOOK_LABELS = {
   7: "7 - Kingdom of Ash"
 };
 
-/* --- First step per book --- */
+/* --- Track first step per book --- */
 const firstStepPerBook = {};
 
 /* --- Load data --- */
@@ -48,7 +46,6 @@ document.addEventListener("DOMContentLoaded", () => {
     .then(text => {
       const parsed = Papa.parse(text, { header: true, skipEmptyLines: true });
       renderTimeline(parsed.data);
-      drawHybridFlowLines();
     });
 });
 
@@ -82,61 +79,49 @@ function renderTimeline(data) {
 
       // Only render box if there are characters or new deaths
       const shouldRenderBox = chars.length > 0 || deadChars.some(c => !renderedDeaths.has(c));
-      let box = null;
+      if (!shouldRenderBox) return;
 
-      if (shouldRenderBox) {
-        box = document.createElement("div");
-        box.className = "location-box";
-        box.dataset.location = field;
-        box.innerHTML = `<div class="location-title">${field}</div>`;
+      const box = document.createElement("div");
+      box.className = "location-box";
+      box.dataset.location = field;
+      box.innerHTML = `<div class="location-title">${field}</div>`;
 
-        // Normal badges
-        if (chars.length) {
-          const badges = document.createElement("div");
-          badges.className = "badges";
+      // Normal badges
+      if (chars.length) {
+        const badges = document.createElement("div");
+        badges.className = "badges";
 
-          chars.forEach(code => {
-            const badge = document.createElement("div");
-            badge.className = "hex";
-            badge.textContent = code;
-            badge.style.backgroundColor = FACTIONS[getFaction(code, stepIndex)].color;
-            badges.appendChild(badge);
-          });
+        chars.forEach(code => {
+          const badge = document.createElement("div");
+          badge.className = "hex";
+          badge.textContent = code;
+          badge.style.backgroundColor = FACTIONS[getFaction(code, stepIndex)].color;
+          badges.appendChild(badge);
+        });
 
-          box.appendChild(badges);
-        }
-
-        // RIP badges
-        if (deadChars.length) {
-          const ripDiv = document.createElement("div");
-          ripDiv.className = "rip-line";
-          ripDiv.innerHTML = `<span>RIP:</span>`;
-
-          deadChars.forEach(code => {
-            if (!renderedDeaths.has(code)) {
-              const ripBadge = document.createElement("div");
-              ripBadge.className = "hex rip";
-              ripBadge.textContent = code;
-              ripDiv.appendChild(ripBadge);
-              renderedDeaths.add(code);
-            }
-          });
-
-          if (ripDiv.children.length > 1) box.appendChild(ripDiv);
-        }
-
-        row.appendChild(box);
+        box.appendChild(badges);
       }
 
-      // Track character positions even if box is null
-      chars.forEach(code => {
-        if (!characterHistory[code]) characterHistory[code] = [];
-        characterHistory[code].push({
-          step: stepIndex,
-          location: field,
-          boxEl: box // null if not rendered
+      // RIP badges
+      if (deadChars.length) {
+        const ripDiv = document.createElement("div");
+        ripDiv.className = "rip-line";
+        ripDiv.innerHTML = `<span>RIP:</span>`;
+
+        deadChars.forEach(code => {
+          if (!renderedDeaths.has(code)) {
+            const ripBadge = document.createElement("div");
+            ripBadge.className = "hex rip";
+            ripBadge.textContent = code;
+            ripDiv.appendChild(ripBadge);
+            renderedDeaths.add(code);
+          }
         });
-      });
+
+        if (ripDiv.children.length > 1) box.appendChild(ripDiv);
+      }
+
+      row.appendChild(box);
     });
 
     stepEl.appendChild(row);
@@ -151,74 +136,4 @@ function renderTimeline(data) {
 
     container.appendChild(stepEl);
   });
-}
-
-/* --- Hybrid flow lines --- */
-function drawHybridFlowLines() {
-  svg.setAttribute("height", document.body.scrollHeight);
-
-  Object.entries(characterHistory).forEach(([code, entries]) => {
-    for (let i = 1; i < entries.length; i++) {
-      const prev = entries[i - 1];
-      const curr = entries[i];
-      const faction = getFaction(code, i);
-
-      // Determine start/end points
-      const startEl = prev.boxEl || prev.fallbackEl || prev.boxEl;
-      const endEl = curr.boxEl || curr.fallbackEl || curr.boxEl;
-
-      if (!startEl || !endEl) continue;
-
-      if (prev.location !== curr.location) {
-        drawCurve(startEl, endEl, FACTIONS[faction].color, 2.5, 0.8);
-      } else {
-        drawVerticalLine(startEl, endEl, FACTIONS[faction].color, 1.2, 0.25, true);
-      }
-    }
-  });
-}
-
-/* --- Movement curve --- */
-function drawCurve(fromEl, toEl, color, width, opacity = 0.7) {
-  const a = fromEl.getBoundingClientRect();
-  const b = toEl.getBoundingClientRect();
-  const s = svg.getBoundingClientRect();
-
-  const x1 = a.left + a.width / 2 - s.left;
-  const y1 = a.bottom - s.top;
-  const x2 = b.left + b.width / 2 - s.left;
-  const y2 = b.top - s.top;
-
-  const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
-  path.setAttribute(
-    "d",
-    `M ${x1} ${y1} C ${x1} ${y1 + 40}, ${x2} ${y2 - 40}, ${x2} ${y2}`
-  );
-  path.setAttribute("stroke", color);
-  path.setAttribute("stroke-width", width);
-  path.setAttribute("fill", "none");
-  path.setAttribute("opacity", opacity);
-
-  svg.appendChild(path);
-}
-
-/* --- Vertical continuation --- */
-function drawVerticalLine(fromEl, toEl, color, width, opacity = 0.25, dotted = false) {
-  const a = fromEl.getBoundingClientRect();
-  const b = toEl.getBoundingClientRect();
-  const s = svg.getBoundingClientRect();
-
-  const x = a.left + a.width / 2 - s.left;
-  const y1 = a.bottom - s.top;
-  const y2 = b.top - s.top;
-
-  const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
-  path.setAttribute("d", `M ${x} ${y1} L ${x} ${y2}`);
-  path.setAttribute("stroke", color);
-  path.setAttribute("stroke-width", width);
-  path.setAttribute("fill", "none");
-  path.setAttribute("opacity", opacity);
-  if (dotted) path.setAttribute("stroke-dasharray", "4,4");
-
-  svg.appendChild(path);
 }
