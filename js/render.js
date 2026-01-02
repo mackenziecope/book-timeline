@@ -18,23 +18,21 @@ function getColorForCode(code) {
 }
 
 document.addEventListener("DOMContentLoaded", () => {
-  fetch(SHEET_CSV_URL)
-    .then(res => res.text())
-    .then(text => {
-      const rows = text.trim().split("\n");
-      const headers = rows.shift().split(",");
+fetch(SHEET_CSV_URL)
+  .then(res => res.text())
+  .then(text => {
+    const parsed = Papa.parse(text, {
+      header: true,
+      skipEmptyLines: true
+    });
 
-      const timelineData = rows.map(row => {
-        const values = row.split(",");
-        const obj = {};
-        headers.forEach((h, i) => {
-          obj[h] = values[i] ? values[i].trim() : "";
-        });
-        return obj;
-      });
+    const timelineData = parsed.data.map(row => {
+      // row is already an object with correct columns
+      return row;
+    });
 
-      renderTimeline(timelineData);
-    })
+    renderTimeline(timelineData);
+  })
     .catch(err => console.error("Failed to load timeline data:", err));
 });
 
