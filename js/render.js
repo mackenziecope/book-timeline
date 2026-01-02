@@ -102,29 +102,25 @@ function renderTimeline(data) {
         box.appendChild(badges);
       }
 
-      // RIP badges
-      if (deadChars.length) {
-        const ripDiv = document.createElement("div");
-        ripDiv.className = "rip-line";
-        ripDiv.innerHTML = `<span>RIP:</span>`;
+ // RIP badges
+if (deadChars.length) {
+  const newDead = deadChars.filter(code => !renderedDeaths.has(code));
+  if (newDead.length) {
+    const ripDiv = document.createElement("div");
+    ripDiv.className = "rip-line";
+    ripDiv.innerHTML = `<span>RIP:</span>`;
 
-        deadChars.forEach(code => {
-          if (!renderedDeaths.has(code)) {
-            const ripBadge = document.createElement("div");
-            ripBadge.className = "hex rip";
-            ripBadge.textContent = code;
-            ripDiv.appendChild(ripBadge);
-            renderedDeaths.add(code);
-          }
-        });
-
-        if (ripDiv.children.length > 1) box.appendChild(ripDiv);
-      }
-
-      row.appendChild(box);
+    newDead.forEach(code => {
+      const ripBadge = document.createElement("div");
+      ripBadge.className = "hex rip";
+      ripBadge.textContent = code;
+      ripDiv.appendChild(ripBadge);
+      renderedDeaths.add(code);
     });
 
-    stepEl.appendChild(row);
+    box.appendChild(ripDiv);
+  }
+}
 
     // Notes field
     if (step.Notes && step.Notes.trim() !== "") {
