@@ -71,67 +71,65 @@ function renderTimeline(data) {
 
     Object.entries(step).forEach(([field, value]) => {
       if (NON_LOCATION_FIELDS.includes(field)) return;
-      if (!value || !value.trim()) return;
 
       const chars = value
-        .replace(/"/g, "")
-        .split(",")
-        .map(v => v.trim())
-        .filter(Boolean);
-      if (!chars.length) return;
+        ? value.replace(/"/g, "").split(",").map(v => v.trim()).filter(Boolean)
+        : [];
+
+      const deadChars = step.Dead
+        ? step.Dead.replace(/"/g, "").split(",").map(v => v.trim()).filter(Boolean)
+        : [];
+
+      // Skip empty locations (no characters arriving/leaving, no deaths)
+      if (chars.length === 0 && deadChars.length === 0) return;
 
       const box = document.createElement("div");
       box.className = "location-box";
       box.dataset.location = field;
       box.innerHTML = `<div class="location-title">${field}</div>`;
 
-      const badges = document.createElement("div");
-      badges.className = "badges";
+      // Normal badges
+      if (chars.length) {
+        const badges = document.createElement("div");
+        badges.className = "badges";
 
-      chars.forEach(code => {
-        const badge = document.createElement("div");
-        badge.className = "hex";
-        badge.textContent = code;
-        // Faction color
-        badge.style.backgroundColor = FACTIONS[getFaction(code, stepIndex)].color;
-        badges.appendChild(badge);
+        chars.forEach(code => {
+          const badge = document.createElement("div");
+          badge.className = "hex";
+          badge.textContent = code;
+          badge.style.backgroundColor = FACTIONS[getFaction(code, stepIndex)].color;
+          badges.appendChild(badge);
 
-        if (!characterHistory[code]) characterHistory[code] = [];
-        characterHistory[code].push({
-          step: stepIndex,
-          location: field,
-          boxEl: box
-        });
-      });
-
-      // Handle Dead field for RIP badges
-      if (step.Dead && step.Dead.trim() !== "") {
-        const deadChars = step.Dead
-          .replace(/"/g, "")
-          .split(",")
-          .map(v => v.trim())
-          .filter(Boolean);
-
-        if (deadChars.length) {
-          const ripDiv = document.createElement("div");
-          ripDiv.className = "rip-line";
-          ripDiv.innerHTML = `<span>RIP:</span>`;
-
-          deadChars.forEach(code => {
-            if (!renderedDeaths.has(code)) {
-              const ripBadge = document.createElement("div");
-              ripBadge.className = "hex rip";
-              ripBadge.textContent = code;
-              ripDiv.appendChild(ripBadge);
-              renderedDeaths.add(code); // Only show once
-            }
+          if (!characterHistory[code]) characterHistory[code] = [];
+          characterHistory[code].push({
+            step: stepIndex,
+            location: field,
+            boxEl: box
           });
+        });
 
-          if (ripDiv.children.length > 1) box.appendChild(ripDiv);
-        }
+        box.appendChild(badges);
       }
 
-      box.appendChild(badges);
+      // RIP badges
+      if (deadChars.length) {
+        const ripDiv = document.createElement("div");
+        ripDiv.className = "rip-line";
+        ripDiv.innerHTML = `<span>RIP:</span>`;
+
+        deadChars.forEach(code => {
+          if (!renderedDeaths.has(code)) {
+            const ripBadge = document.createElement("div");
+            ripBadge.className = "hex rip";
+            ripBadge.textContent = code;
+            ripDiv.appendChild(ripBadge);
+            renderedDeaths.add(code);
+          }
+        });
+
+        if (ripDiv.children.length > 1) box.appendChild(ripDiv);
+      }
+
       row.appendChild(box);
     });
 
