@@ -22,7 +22,7 @@ body {
   padding: 40px;
 }
 
-#timeline-map {
+#book-timeline {
   position: relative;
   display: flex;
   flex-direction: column;
@@ -30,7 +30,7 @@ body {
 }
 
 /* vertical spine */
-#timeline-map::before {
+#book-timeline::before {
   content: "";
   position: absolute;
   left: 50%;
