@@ -1,107 +1,79 @@
-:root {
-  --bg: #0f1220;
-  --step-bg: #171b33;
-  --spine: #3a3f66;
-
-  --location-bg: #262b4a;
-  --location-border: #3b4170;
-
-  --text: #e6e8ff;
-  --badge: #5b6cff;
-
-  --rip: #6b6f8f;
-
-  --radius: 10px;
-  --gap: 16px;
-}
-
 body {
-  background: var(--bg);
-  color: var(--text);
-  font-family: system-ui, sans-serif;
-  padding: 40px;
+  font-family: sans-serif;
+  margin: 0;
+  padding: 0;
 }
 
 #timeline-map {
-  position: relative;
   display: flex;
   flex-direction: column;
-  gap: 40px;
-}
-
-/* vertical spine */
-#timeline-map::before {
-  content: "";
-  position: absolute;
-  left: 50%;
-  top: 0;
-  bottom: 0;
-  width: 2px;
-  background: var(--spine);
-  opacity: 0.4;
+  gap: 20px;
+  padding: 20px;
 }
 
 .timeline-step {
-  position: relative;
-  padding-left: 40px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
 }
 
 .step-label {
-  font-weight: 600;
-  margin-bottom: 12px;
-  opacity: 0.85;
+  font-weight: bold;
+  font-size: 20px;
+  margin-bottom: 5px;
 }
 
 .location-row {
   display: flex;
   flex-wrap: wrap;
-  gap: var(--gap);
+  gap: 15px;
 }
 
 .location-box {
-  background: var(--location-bg);
-  border: 1px solid var(--location-border);
-  border-radius: var(--radius);
-  padding: 12px;
-  min-width: 200px;
+  border: 1px solid #ccc;
+  padding: 10px;
+  min-width: 120px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
 .location-title {
-  font-weight: 600;
-  margin-bottom: 8px;
+  font-weight: bold;
+  margin-bottom: 5px;
 }
 
 .badges {
   display: flex;
   flex-wrap: wrap;
-  gap: 6px;
+  gap: 5px;
+  justify-content: center;
 }
 
 .hex {
   width: 50px;
-  height: 43.3px; /* 50 * sqrt(3)/2 */
-  font-size: 16px;
-  clip-path: polygon(
-    50% 0%, 93.3% 25%, 93.3% 75%, 
-    50% 100%, 6.7% 75%, 6.7% 25%
-  );
+  height: 43.3px; /* equilateral hexagon */
+  clip-path: polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%);
   display: flex;
-  align-items: center;
   justify-content: center;
-  font-weight: 600;
+  align-items: center;
+  font-size: 16px;
   color: white;
 }
 
 .rip {
-  margin-top: 8px;
-  opacity: 0.7;
+  margin-top: 5px;
 }
 
 .rip-label {
   font-size: 12px;
-  margin-bottom: 4px;
+  margin-bottom: 2px;
 }
 
+/* Smaller RIP hexes */
 .rip .hex {
-  background: var(--rip);
+  width: 25px;
+  height: 21.65px;
+  font-size: 8px;
+  background-color: #6b6f8f !important;
 }
