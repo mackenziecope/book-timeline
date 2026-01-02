@@ -1,0 +1,10 @@
+/* Example character-specific colors */
+.hex[data-character="A"] { background-color: #FF6B6B; }   /* Aelin */
+.hex[data-character="R"] { background-color: #4ECDC4; }   /* Rowan */
+.hex[data-character="C"] { background-color: #FFD93D; }   /* Chaol */
+.hex[data-character="DOR"] { background-color: #6A4C93; }   /* Dorian */
+.hex[data-character="EL"] { background-color: #FFA500; }   /* Elide */
+
+/* Example type-based badges (future-proof) */
+.hex[data-type="army"] { border: 2px dashed gold; }
+.hex[data-type="vip"] { border: 2px solid white; }
