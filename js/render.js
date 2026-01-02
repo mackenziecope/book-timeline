@@ -5,23 +5,15 @@ const svg = document.getElementById("flow-layer");
 
 const NON_LOCATION_FIELDS = ["Book", "step_id", "Order", "Notes", "Dead"];
 
-/* --- Factions (starter set) --- */
+/* --- Factions --- */
 const FACTIONS = {
   terrasen: { color: "#4CAF50" },
   adarlan: { color: "#C62828" },
   neutral: { color: "#777" }
 };
 
-/* Optional: default faction per character */
-const DEFAULT_FACTION = {
-  // AL: "terrasen",
-  // CHA: "adarlan"
-};
-
-/* Optional: step-specific overrides */
-const FACTION_OVERRIDES = {
-  // 42: { CHA: "terrasen" }
-};
+const DEFAULT_FACTION = {};
+const FACTION_OVERRIDES = {};
 
 function getFaction(character, stepId) {
   return (
@@ -31,20 +23,30 @@ function getFaction(character, stepId) {
   );
 }
 
-/* --- Data stores --- */
-const characterHistory = {};      // { AL: [{ step, location, boxEl }] }
+/* --- Character tracking --- */
+const characterHistory = {};
 const renderedDeaths = new Set();
+
+/* --- Book labels table --- */
+const BOOK_LABELS = {
+  0: "0 - Assassin's Blade",
+  1: "1 - Throne of Glass",
+  2: "2 - Crown of Midnight",
+  3: "3 - Heir of Fire",
+  4: "4 - Queen of Shadows",
+  5.5: "5.5 - Empire of Storms / Tower of Dawn",
+  7: "7 - Kingdom of Ash"
+};
+
+/* --- Keep track of first step per book --- */
+const firstStepPerBook = {};
 
 /* --- Load data --- */
 document.addEventListener("DOMContentLoaded", () => {
   fetch(SHEET_CSV_URL)
     .then(res => res.text())
     .then(text => {
-      const parsed = Papa.parse(text, {
-        header: true,
-        skipEmptyLines: true
-      });
-
+      const parsed = Papa.parse(text, { header: true, skipEmptyLines: true });
       renderTimeline(parsed.data);
       drawHybridFlowLines();
     });
@@ -56,8 +58,12 @@ function renderTimeline(data) {
     const stepEl = document.createElement("section");
     stepEl.className = "timeline-step";
 
-    if (step.Book) {
-      stepEl.innerHTML = `<div class="step-label">${step.Book}</div>`;
+    // Book label logic: only at first step of each book
+    const bookNum = step.Book;
+    if (bookNum !== "" && !firstStepPerBook[bookNum]) {
+      const labelText = BOOK_LABELS[bookNum] || `Book ${bookNum}`;
+      stepEl.innerHTML = `<div class="step-label">${labelText}</div>`;
+      firstStepPerBook[bookNum] = true;
     }
 
     const row = document.createElement("div");
@@ -85,10 +91,7 @@ function renderTimeline(data) {
         badge.textContent = code;
         badges.appendChild(badge);
 
-        if (!characterHistory[code]) {
-          characterHistory[code] = [];
-        }
-
+        if (!characterHistory[code]) characterHistory[code] = [];
         characterHistory[code].push({
           step: stepIndex,
           location: field,
@@ -101,6 +104,15 @@ function renderTimeline(data) {
     });
 
     stepEl.appendChild(row);
+
+    // Add Notes if populated
+    if (step.Notes && step.Notes.trim() !== "") {
+      const notesEl = document.createElement("div");
+      notesEl.className = "step-notes";
+      notesEl.textContent = step.Notes.trim();
+      stepEl.appendChild(notesEl);
+    }
+
     container.appendChild(stepEl);
   });
 }
@@ -109,39 +121,27 @@ function renderTimeline(data) {
 function drawHybridFlowLines() {
   svg.setAttribute("height", document.body.scrollHeight);
 
-  const transitions = {};
-
   Object.entries(characterHistory).forEach(([code, entries]) => {
     for (let i = 1; i < entries.length; i++) {
       const prev = entries[i - 1];
       const curr = entries[i];
+      const faction = getFaction(code, i);
 
-      const key = `${prev.location}→${curr.location}|${i}`;
-
-      if (!transitions[key]) {
-        transitions[key] = {
-          fromBox: prev.boxEl,
-          toBox: curr.boxEl,
-          count: 0,
-          faction: getFaction(code, i)
-        };
+      if (prev.location !== curr.location) {
+        // Movement line (thicker, solid)
+        drawCurve(prev.boxEl, curr.boxEl, FACTIONS[faction].color, 2.5, 0.8);
+      } else {
+        // Vertical continuation line (thinner, faded)
+        // Opacity fades with number of steps
+        const fadeOpacity = 0.3; // can adjust if you want more gradual fade
+        drawVerticalLine(prev.boxEl, curr.boxEl, FACTIONS[faction].color, 1.2, fadeOpacity);
       }
-      transitions[key].count++;
     }
-  });
-
-  Object.values(transitions).forEach(t => {
-    drawCurve(
-      t.fromBox,
-      t.toBox,
-      FACTIONS[t.faction].color,
-      2 + t.count
-    );
   });
 }
 
-/* --- SVG curve helper --- */
-function drawCurve(fromEl, toEl, color, width) {
+/* --- Movement curve --- */
+function drawCurve(fromEl, toEl, color, width, opacity = 0.7) {
   const a = fromEl.getBoundingClientRect();
   const b = toEl.getBoundingClientRect();
   const s = svg.getBoundingClientRect();
@@ -159,7 +159,27 @@ function drawCurve(fromEl, toEl, color, width) {
   path.setAttribute("stroke", color);
   path.setAttribute("stroke-width", width);
   path.setAttribute("fill", "none");
-  path.setAttribute("opacity", "0.7");
+  path.setAttribute("opacity", opacity);
+
+  svg.appendChild(path);
+}
+
+/* --- Vertical continuation --- */
+function drawVerticalLine(fromEl, toEl, color, width, opacity = 0.3) {
+  const a = fromEl.getBoundingClientRect();
+  const b = toEl.getBoundingClientRect();
+  const s = svg.getBoundingClientRect();
+
+  const x = a.left + a.width / 2 - s.left;
+  const y1 = a.bottom - s.top;
+  const y2 = b.top - s.top;
+
+  const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+  path.setAttribute("d", `M ${x} ${y1} L ${x} ${y2}`);
+  path.setAttribute("stroke", color);
+  path.setAttribute("stroke-width", width);
+  path.setAttribute("fill", "none");
+  path.setAttribute("opacity", opacity);
 
   svg.appendChild(path);
 }
