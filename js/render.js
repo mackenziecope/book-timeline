@@ -80,57 +80,63 @@ function renderTimeline(data) {
         ? step.Dead.replace(/"/g, "").split(",").map(v => v.trim()).filter(Boolean)
         : [];
 
-      // Skip empty locations (no characters arriving/leaving, no deaths)
-      if (chars.length === 0 && deadChars.length === 0) return;
+      // Only render box if there are characters or new deaths
+      const shouldRenderBox = chars.length > 0 || deadChars.some(c => !renderedDeaths.has(c));
+      let box = null;
 
-      const box = document.createElement("div");
-      box.className = "location-box";
-      box.dataset.location = field;
-      box.innerHTML = `<div class="location-title">${field}</div>`;
+      if (shouldRenderBox) {
+        box = document.createElement("div");
+        box.className = "location-box";
+        box.dataset.location = field;
+        box.innerHTML = `<div class="location-title">${field}</div>`;
 
-      // Normal badges
-      if (chars.length) {
-        const badges = document.createElement("div");
-        badges.className = "badges";
+        // Normal badges
+        if (chars.length) {
+          const badges = document.createElement("div");
+          badges.className = "badges";
 
-        chars.forEach(code => {
-          const badge = document.createElement("div");
-          badge.className = "hex";
-          badge.textContent = code;
-          badge.style.backgroundColor = FACTIONS[getFaction(code, stepIndex)].color;
-          badges.appendChild(badge);
-
-          if (!characterHistory[code]) characterHistory[code] = [];
-          characterHistory[code].push({
-            step: stepIndex,
-            location: field,
-            boxEl: box
+          chars.forEach(code => {
+            const badge = document.createElement("div");
+            badge.className = "hex";
+            badge.textContent = code;
+            badge.style.backgroundColor = FACTIONS[getFaction(code, stepIndex)].color;
+            badges.appendChild(badge);
           });
-        });
 
-        box.appendChild(badges);
+          box.appendChild(badges);
+        }
+
+        // RIP badges
+        if (deadChars.length) {
+          const ripDiv = document.createElement("div");
+          ripDiv.className = "rip-line";
+          ripDiv.innerHTML = `<span>RIP:</span>`;
+
+          deadChars.forEach(code => {
+            if (!renderedDeaths.has(code)) {
+              const ripBadge = document.createElement("div");
+              ripBadge.className = "hex rip";
+              ripBadge.textContent = code;
+              ripDiv.appendChild(ripBadge);
+              renderedDeaths.add(code);
+            }
+          });
+
+          if (ripDiv.children.length > 1) box.appendChild(ripDiv);
+        }
+
+        row.appendChild(box);
       }
 
-      // RIP badges
-      if (deadChars.length) {
-        const ripDiv = document.createElement("div");
-        ripDiv.className = "rip-line";
-        ripDiv.innerHTML = `<span>RIP:</span>`;
-
-        deadChars.forEach(code => {
-          if (!renderedDeaths.has(code)) {
-            const ripBadge = document.createElement("div");
-            ripBadge.className = "hex rip";
-            ripBadge.textContent = code;
-            ripDiv.appendChild(ripBadge);
-            renderedDeaths.add(code);
-          }
+      // Track character positions even if box is null
+      chars.forEach(code => {
+        if (!characterHistory[code]) characterHistory[code] = [];
+        characterHistory[code].push({
+          step: stepIndex,
+          location: field,
+          boxEl: box // null if not rendered
         });
-
-        if (ripDiv.children.length > 1) box.appendChild(ripDiv);
-      }
-
-      row.appendChild(box);
+      });
     });
 
     stepEl.appendChild(row);
@@ -157,12 +163,16 @@ function drawHybridFlowLines() {
       const curr = entries[i];
       const faction = getFaction(code, i);
 
+      // Determine start/end points
+      const startEl = prev.boxEl || prev.fallbackEl || prev.boxEl;
+      const endEl = curr.boxEl || curr.fallbackEl || curr.boxEl;
+
+      if (!startEl || !endEl) continue;
+
       if (prev.location !== curr.location) {
-        drawCurve(prev.boxEl, curr.boxEl, FACTIONS[faction].color, 2.5, 0.8);
+        drawCurve(startEl, endEl, FACTIONS[faction].color, 2.5, 0.8);
       } else {
-        // vertical continuation, faded
-        const fadeOpacity = 0.25; 
-        drawVerticalLine(prev.boxEl, curr.boxEl, FACTIONS[faction].color, 1.2, fadeOpacity);
+        drawVerticalLine(startEl, endEl, FACTIONS[faction].color, 1.2, 0.25, true);
       }
     }
   });
@@ -193,7 +203,7 @@ function drawCurve(fromEl, toEl, color, width, opacity = 0.7) {
 }
 
 /* --- Vertical continuation --- */
-function drawVerticalLine(fromEl, toEl, color, width, opacity = 0.25) {
+function drawVerticalLine(fromEl, toEl, color, width, opacity = 0.25, dotted = false) {
   const a = fromEl.getBoundingClientRect();
   const b = toEl.getBoundingClientRect();
   const s = svg.getBoundingClientRect();
@@ -208,6 +218,7 @@ function drawVerticalLine(fromEl, toEl, color, width, opacity = 0.25) {
   path.setAttribute("stroke-width", width);
   path.setAttribute("fill", "none");
   path.setAttribute("opacity", opacity);
+  if (dotted) path.setAttribute("stroke-dasharray", "4,4");
 
   svg.appendChild(path);
 }
