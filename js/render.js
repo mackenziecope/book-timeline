@@ -58,7 +58,7 @@ function renderTimeline(data) {
     const stepEl = document.createElement("section");
     stepEl.className = "timeline-step";
 
-    // Book label logic: only at first step of each book
+    // Book label logic
     const bookNum = step.Book;
     if (bookNum !== "" && !firstStepPerBook[bookNum]) {
       const labelText = BOOK_LABELS[bookNum] || `Book ${bookNum}`;
@@ -71,9 +71,14 @@ function renderTimeline(data) {
 
     Object.entries(step).forEach(([field, value]) => {
       if (NON_LOCATION_FIELDS.includes(field)) return;
-      if (!value) return;
+      if (!value || !value.trim()) return;
 
-      const chars = value.split(",").map(v => v.trim()).filter(Boolean);
+      // Robust splitting: remove quotes and extra spaces
+      const chars = value
+        .replace(/"/g, "")
+        .split(",")
+        .map(v => v.trim())
+        .filter(Boolean);
       if (!chars.length) return;
 
       const box = document.createElement("div");
@@ -105,7 +110,7 @@ function renderTimeline(data) {
 
     stepEl.appendChild(row);
 
-    // Add Notes if populated
+    // Add Notes if present
     if (step.Notes && step.Notes.trim() !== "") {
       const notesEl = document.createElement("div");
       notesEl.className = "step-notes";
@@ -117,7 +122,7 @@ function renderTimeline(data) {
   });
 }
 
-/* --- Draw hybrid flow lines --- */
+/* --- Hybrid flow lines --- */
 function drawHybridFlowLines() {
   svg.setAttribute("height", document.body.scrollHeight);
 
@@ -128,13 +133,10 @@ function drawHybridFlowLines() {
       const faction = getFaction(code, i);
 
       if (prev.location !== curr.location) {
-        // Movement line (thicker, solid)
         drawCurve(prev.boxEl, curr.boxEl, FACTIONS[faction].color, 2.5, 0.8);
       } else {
-        // Vertical continuation line (thinner, faded)
-        // Opacity fades with number of steps
-        const fadeOpacity = 0.3; // can adjust if you want more gradual fade
-        drawVerticalLine(prev.boxEl, curr.boxEl, FACTIONS[faction].color, 1.2, fadeOpacity);
+        // vertical continuation, faded
+        drawVerticalLine(prev.boxEl, curr.boxEl, FACTIONS[faction].color, 1.2, 0.25);
       }
     }
   });
@@ -165,7 +167,7 @@ function drawCurve(fromEl, toEl, color, width, opacity = 0.7) {
 }
 
 /* --- Vertical continuation --- */
-function drawVerticalLine(fromEl, toEl, color, width, opacity = 0.3) {
+function drawVerticalLine(fromEl, toEl, color, width, opacity = 0.25) {
   const a = fromEl.getBoundingClientRect();
   const b = toEl.getBoundingClientRect();
   const s = svg.getBoundingClientRect();
