@@ -22,7 +22,7 @@ body {
   padding: 40px;
 }
 
-#book-timeline {
+#timeline-map {
   position: relative;
   display: flex;
   flex-direction: column;
@@ -30,7 +30,7 @@ body {
 }
 
 /* vertical spine */
-#book-timeline::before {
+#timeline-map::before {
   content: "";
   position: absolute;
   left: 50%;
@@ -78,24 +78,18 @@ body {
 }
 
 .hex {
-  width: 40px;
-  height: 40px;
-  background: var(--badge);
-  color: white;
-  font-size: 12px;
-  font-weight: 600;
-
+  width: 50px;
+  height: 43.3px; /* 50 * sqrt(3)/2 */
+  font-size: 16px;
+  clip-path: polygon(
+    50% 0%, 93.3% 25%, 93.3% 75%, 
+    50% 100%, 6.7% 75%, 6.7% 25%
+  );
   display: flex;
   align-items: center;
   justify-content: center;
-
-  clip-path: polygon(
-    25% 0%, 75% 0%,
-    100% 50%,
-    75% 100%,
-    25% 100%,
-    0% 50%
-  );
+  font-weight: 600;
+  color: white;
 }
 
 .rip {
