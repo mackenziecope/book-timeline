@@ -38,7 +38,7 @@ const BOOK_LABELS = {
   7: "7 - Kingdom of Ash"
 };
 
-/* --- Keep track of first step per book --- */
+/* --- First step per book --- */
 const firstStepPerBook = {};
 
 /* --- Load data --- */
@@ -58,7 +58,7 @@ function renderTimeline(data) {
     const stepEl = document.createElement("section");
     stepEl.className = "timeline-step";
 
-    // Book label logic
+    // Book label only at first step of each book
     const bookNum = step.Book;
     if (bookNum !== "" && !firstStepPerBook[bookNum]) {
       const labelText = BOOK_LABELS[bookNum] || `Book ${bookNum}`;
@@ -73,7 +73,6 @@ function renderTimeline(data) {
       if (NON_LOCATION_FIELDS.includes(field)) return;
       if (!value || !value.trim()) return;
 
-      // Robust splitting: remove quotes and extra spaces
       const chars = value
         .replace(/"/g, "")
         .split(",")
@@ -84,7 +83,6 @@ function renderTimeline(data) {
       const box = document.createElement("div");
       box.className = "location-box";
       box.dataset.location = field;
-
       box.innerHTML = `<div class="location-title">${field}</div>`;
 
       const badges = document.createElement("div");
@@ -94,6 +92,8 @@ function renderTimeline(data) {
         const badge = document.createElement("div");
         badge.className = "hex";
         badge.textContent = code;
+        // Faction color
+        badge.style.backgroundColor = FACTIONS[getFaction(code, stepIndex)].color;
         badges.appendChild(badge);
 
         if (!characterHistory[code]) characterHistory[code] = [];
@@ -104,13 +104,40 @@ function renderTimeline(data) {
         });
       });
 
+      // Handle Dead field for RIP badges
+      if (step.Dead && step.Dead.trim() !== "") {
+        const deadChars = step.Dead
+          .replace(/"/g, "")
+          .split(",")
+          .map(v => v.trim())
+          .filter(Boolean);
+
+        if (deadChars.length) {
+          const ripDiv = document.createElement("div");
+          ripDiv.className = "rip-line";
+          ripDiv.innerHTML = `<span>RIP:</span>`;
+
+          deadChars.forEach(code => {
+            if (!renderedDeaths.has(code)) {
+              const ripBadge = document.createElement("div");
+              ripBadge.className = "hex rip";
+              ripBadge.textContent = code;
+              ripDiv.appendChild(ripBadge);
+              renderedDeaths.add(code); // Only show once
+            }
+          });
+
+          if (ripDiv.children.length > 1) box.appendChild(ripDiv);
+        }
+      }
+
       box.appendChild(badges);
       row.appendChild(box);
     });
 
     stepEl.appendChild(row);
 
-    // Add Notes if present
+    // Notes field
     if (step.Notes && step.Notes.trim() !== "") {
       const notesEl = document.createElement("div");
       notesEl.className = "step-notes";
@@ -136,7 +163,8 @@ function drawHybridFlowLines() {
         drawCurve(prev.boxEl, curr.boxEl, FACTIONS[faction].color, 2.5, 0.8);
       } else {
         // vertical continuation, faded
-        drawVerticalLine(prev.boxEl, curr.boxEl, FACTIONS[faction].color, 1.2, 0.25);
+        const fadeOpacity = 0.25; 
+        drawVerticalLine(prev.boxEl, curr.boxEl, FACTIONS[faction].color, 1.2, fadeOpacity);
       }
     }
   });
