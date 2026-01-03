@@ -36,6 +36,9 @@ const BOOK_LABELS = {
 /* --- Track first step per book --- */
 const firstStepPerBook = {};
 
+/* --- Track previous step's location content --- */
+let prevStepLocations = {};
+
 /* --- Load data --- */
 document.addEventListener("DOMContentLoaded", () => {
   fetch(SHEET_CSV_URL)
@@ -63,20 +66,33 @@ function renderTimeline(data) {
     const row = document.createElement("div");
     row.className = "location-row";
 
+    const currentStepLocations = {};
+
     Object.entries(step).forEach(([field, value]) => {
       if (NON_LOCATION_FIELDS.includes(field)) return;
 
+      // Current characters at this location
       const chars = value
         ? value.replace(/"/g, "").split(",").map(v => v.trim()).filter(Boolean)
         : [];
 
+      // Dead characters at this step
       const deadChars = step.Dead
         ? step.Dead.replace(/"/g, "").split(",").map(v => v.trim()).filter(Boolean)
         : [];
-
       const newDead = deadChars.filter(code => !renderedDeaths.has(code));
-      const shouldRenderBox = chars.length > 0 || newDead.length > 0;
-      if (!shouldRenderBox) return;
+
+      // Store for comparison with previous step
+      currentStepLocations[field] = {
+        chars: [...chars].sort(),
+        dead: [...newDead].sort()
+      };
+
+      // Only render box if characters changed or someone died
+      const prev = prevStepLocations[field] || { chars: [], dead: [] };
+      const charsChanged = prev.chars.join(",") !== chars.join(",");
+      const deadChanged = prev.dead.join(",") !== newDead.join(",");
+      if (!charsChanged && !deadChanged) return;
 
       const box = document.createElement("div");
       box.className = "location-box";
@@ -87,7 +103,6 @@ function renderTimeline(data) {
       if (chars.length) {
         const badges = document.createElement("div");
         badges.className = "badges";
-
         chars.forEach(code => {
           const badge = document.createElement("div");
           badge.className = "hex";
@@ -95,7 +110,6 @@ function renderTimeline(data) {
           badge.style.backgroundColor = FACTIONS[getFaction(code, stepIndex)].color;
           badges.appendChild(badge);
         });
-
         box.appendChild(badges);
       }
 
@@ -104,7 +118,6 @@ function renderTimeline(data) {
         const ripDiv = document.createElement("div");
         ripDiv.className = "rip-line";
         ripDiv.innerHTML = `<span>RIP:</span>`;
-
         newDead.forEach(code => {
           const ripBadge = document.createElement("div");
           ripBadge.className = "hex rip";
@@ -112,12 +125,13 @@ function renderTimeline(data) {
           ripDiv.appendChild(ripBadge);
           renderedDeaths.add(code);
         });
-
         box.appendChild(ripDiv);
       }
 
       row.appendChild(box);
     });
+
+    prevStepLocations = currentStepLocations;
 
     stepEl.appendChild(row);
 

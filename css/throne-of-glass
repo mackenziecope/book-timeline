@@ -1,50 +1,51 @@
 /* Timeline Step */
 .timeline-step {
-  margin: 40px 0;
+  margin: 30px 0;
   position: relative;
 }
 
 /* Book label */
 .step-label {
-  font-size: 1.5em;
+  font-size: 1.3em;
   font-weight: bold;
-  margin-bottom: 15px;
+  margin-bottom: 10px;
 }
 
 /* Row of locations */
 .location-row {
   display: flex;
-  gap: 20px;
+  gap: 15px;
   flex-wrap: wrap;
 }
 
 /* Location box */
 .location-box {
   border: 2px solid #333;
-  border-radius: 8px;
-  padding: 10px;
-  min-width: 100px;
+  border-radius: 6px;
+  padding: 8px;
+  min-width: 90px;
   position: relative;
 }
 
 /* Location title */
 .location-title {
   font-weight: bold;
-  margin-bottom: 6px;
+  margin-bottom: 4px;
+  font-size: 0.9em;
 }
 
 /* Badges container */
 .badges {
   display: flex;
   flex-wrap: wrap;
-  gap: 5px;
-  margin-top: 5px;
+  gap: 4px;
+  margin-top: 4px;
 }
 
 /* Normal badge */
 .hex {
-  width: 30px;
-  height: 30px;
+  width: 24px;
+  height: 24px;
   background-color: #777;
   clip-path: polygon(
     25% 0%, 75% 0%, 
@@ -54,7 +55,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 0.8em;
+  font-size: 0.7em;
   color: white;
 }
 
@@ -62,26 +63,26 @@
 .rip-line {
   display: flex;
   align-items: center;
-  gap: 4px;
-  margin-top: 5px;
-  font-size: 0.8em;
+  gap: 3px;
+  margin-top: 3px;
+  font-size: 0.7em;
   color: #555;
 }
 
 /* RIP label inline */
 .rip-line span {
   font-weight: bold;
-  font-size: 0.8em;
-  margin-right: 3px;
+  font-size: 0.7em;
+  margin-right: 2px;
 }
 
 /* RIP badge */
 .hex.rip {
-  width: 15px;
-  height: 15px;
+  width: 12px;
+  height: 12px;
   background-color: #999;
   color: #333;
-  font-size: 0.6em;
+  font-size: 0.5em;
   clip-path: polygon(
     25% 0%, 75% 0%, 
     100% 50%, 75% 100%, 
@@ -91,8 +92,8 @@
 
 /* Notes field */
 .step-notes {
-  margin-top: 8px;
+  margin-top: 6px;
   font-style: italic;
-  font-size: 0.9em;
+  font-size: 0.85em;
   color: #444;
 }
