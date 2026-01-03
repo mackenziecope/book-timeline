@@ -134,3 +134,9 @@ body {
 }
 
 /* Normal hexes stay unchanged */
+
+.badge-spacer {
+  width: 16px;
+  height: 1px;
+}
+
