@@ -1,4 +1,5 @@
 const SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTj4mIQNaRGqy8JbMyAHjDnQH-BbAry72Mtqrt3oxVvp8buPELwwgfHXlb7eBRHBOsAZ010z8Sl5Vd5/pub?gid=0&single=true&output=csv";
+const CHARACTERS_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTj4mIQNaRGqy8JbMyAHjDnQH-BbAry72Mtqrt3oxVvp8buPELwwgfHXlb7eBRHBOsAZ010z8Sl5Vd5/pub?gid=1645073460&single=true&output=csv";
 
 const container = document.getElementById("timeline-map");
 
@@ -24,6 +25,7 @@ function getFaction(character, stepId) {
 
 /* --- Track RIP badges --- */
 const renderedDeaths = new Set();
+const characterOrderMap = {}; // <- this is your new global
 
 /* --- Book labels --- */
 const BOOK_LABELS = {
@@ -39,17 +41,28 @@ const BOOK_LABELS = {
 const firstStepPerBook = {};
 let prevStepLocations = {};
 
-/* --- Load data --- */
 document.addEventListener("DOMContentLoaded", () => {
-  fetch(SHEET_CSV_URL)
-    .then(res => res.text())
-    .then(text => {
-      const parsed = Papa.parse(text, {
-        header: true,
-        skipEmptyLines: true
-      });
-      renderTimeline(parsed.data);
+  Promise.all([
+    fetch(SHEET_CSV_URL).then(res => res.text()),
+    fetch(CHARACTERS_CSV_URL).then(res => res.text())
+  ]).then(([timelineText, characterText]) => {
+    const timelineParsed = Papa.parse(timelineText, {
+      header: true,
+      skipEmptyLines: true
     });
+
+    const characterParsed = Papa.parse(characterText, {
+      header: true,
+      skipEmptyLines: true
+    });
+
+    characterParsed.data.forEach(row => {
+      if (!row.code) return;
+      characterOrderMap[row.code.trim()] = Number(row.order) || 999;
+    });
+
+    renderTimeline(timelineParsed.data);
+  });
 });
 
 /* --- Render timeline --- */
@@ -81,6 +94,28 @@ function renderTimeline(data) {
       const rawEntries = value
         ? value.replace(/"/g, "").split(",")
         : [];
+      
+      // Sort character entries by priority, keep spacers
+      const sortedEntries = [];
+      const characters = rawEntries
+        .map(v => v.trim())
+        .filter(Boolean)
+        .sort((a, b) => {
+          return (
+            (characterOrderMap[a] ?? 999) -
+            (characterOrderMap[b] ?? 999)
+          );
+        });
+      
+      let charIndex = 0;
+        sortedEntries.forEach(entry => {
+        if (!entry.trim()) {
+          sortedEntries.push(""); // spacer
+        } else {
+          sortedEntries.push(characters[charIndex]);
+          charIndex++;
+        }
+      });
 
       const charsOnly = rawEntries
         .map(v => v.trim())
