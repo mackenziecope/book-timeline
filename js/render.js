@@ -1,6 +1,7 @@
 const SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTj4mIQNaRGqy8JbMyAHjDnQH-BbAry72Mtqrt3oxVvp8buPELwwgfHXlb7eBRHBOsAZ010z8Sl5Vd5/pub?gid=0&single=true&output=csv";
 
 const container = document.getElementById("timeline-map");
+
 const NON_LOCATION_FIELDS = ["Book", "step_id", "Order", "Notes", "Dead"];
 
 /* --- Factions --- */
@@ -9,8 +10,10 @@ const FACTIONS = {
   adarlan: { color: "#C62828" },
   neutral: { color: "#777" }
 };
+
 const DEFAULT_FACTION = {};
 const FACTION_OVERRIDES = {};
+
 function getFaction(character, stepId) {
   return (
     FACTION_OVERRIDES[stepId]?.[character] ||
@@ -33,10 +36,7 @@ const BOOK_LABELS = {
   7: "7 - Kingdom of Ash"
 };
 
-/* --- Track first step per book --- */
 const firstStepPerBook = {};
-
-/* --- Track previous step's location content --- */
 let prevStepLocations = {};
 
 /* --- Load data --- */
@@ -44,21 +44,23 @@ document.addEventListener("DOMContentLoaded", () => {
   fetch(SHEET_CSV_URL)
     .then(res => res.text())
     .then(text => {
-      const parsed = Papa.parse(text, { header: true, skipEmptyLines: true });
+      const parsed = Papa.parse(text, {
+        header: true,
+        skipEmptyLines: true
+      });
       renderTimeline(parsed.data);
     });
 });
 
 /* --- Render timeline --- */
 function renderTimeline(data) {
-  // Track last known boxes for all characters (for RIP placement)
   const lastLocationBoxMap = {};
 
   data.forEach((step, stepIndex) => {
     const stepEl = document.createElement("section");
     stepEl.className = "timeline-step";
 
-    // Book label only at first step of each book
+    /* --- Book label --- */
     const bookNum = step.Book;
     if (bookNum !== "" && !firstStepPerBook[bookNum]) {
       const labelText = BOOK_LABELS[bookNum] || `Book ${bookNum}`;
@@ -71,60 +73,63 @@ function renderTimeline(data) {
 
     const currentStepLocations = {};
 
+    /* --- Locations --- */
     Object.entries(step).forEach(([field, value]) => {
       if (NON_LOCATION_FIELDS.includes(field)) return;
 
-      // Current characters at this location
       const chars = value
-        ? value.replace(/"/g, "").split(",").map(v => v.trim()).filter(Boolean)
+        ? value
+            .replace(/"/g, "")
+            .split(",")
+            .map(v => v.trim())
+            .filter(Boolean)
         : [];
 
       currentStepLocations[field] = {
         chars: [...chars].sort()
       };
 
-      // Skip box if empty (no chars) AND not first appearance
+      /* --- Skip empty locations --- */
+      if (chars.length === 0) return;
+
       const prev = prevStepLocations[field] || { chars: [] };
-      const charsChanged = prev.chars.join(",") !== chars.join(",");
-      const isFirstStep = stepIndex === 0;
-      
-      // Step 0: only show populated locations
-      if (isFirstStep && chars.length === 0 && newDead.length === 0) return;
-      
-      // All other steps: only show if something changed
-      if (!isFirstStep && !charsChanged && !deadChanged) return;
+      const charsChanged =
+        prev.chars.join(",") !== currentStepLocations[field].chars.join(",");
 
-      if (!isFirstAppearance && !charsChanged) return;
+      /* --- Only render if something changed --- */
+      if (!charsChanged) return;
 
-      // Render box
       const box = document.createElement("div");
       box.className = "location-box";
       box.dataset.location = field;
       box.innerHTML = `<div class="location-title">${field}</div>`;
 
-      // Normal badges
-      if (chars.length) {
-        const badges = document.createElement("div");
-        badges.className = "badges";
-        chars.forEach(code => {
-          const badge = document.createElement("div");
-          badge.className = "hex";
-          badge.textContent = code;
-          badge.style.backgroundColor = FACTIONS[getFaction(code, stepIndex)].color;
-          badges.appendChild(badge);
+      const badges = document.createElement("div");
+      badges.className = "badges";
 
-          // Update last known location
-          lastLocationBoxMap[code] = box;
-        });
-        box.appendChild(badges);
-      }
+      chars.forEach(code => {
+        const badge = document.createElement("div");
+        badge.className = "hex";
+        badge.textContent = code;
+        badge.style.backgroundColor =
+          FACTIONS[getFaction(code, stepIndex)].color;
 
+        badges.appendChild(badge);
+        lastLocationBoxMap[code] = box;
+      });
+
+      box.appendChild(badges);
       row.appendChild(box);
     });
 
-    // --- Handle RIP badges ---
+    /* --- RIP badges (placed at last known location) --- */
     if (step.Dead && step.Dead.trim() !== "") {
-      const deadChars = step.Dead.replace(/"/g, "").split(",").map(v => v.trim()).filter(Boolean);
+      const deadChars = step.Dead
+        .replace(/"/g, "")
+        .split(",")
+        .map(v => v.trim())
+        .filter(Boolean);
+
       deadChars.forEach(code => {
         if (renderedDeaths.has(code)) return;
 
@@ -142,8 +147,8 @@ function renderTimeline(data) {
         const ripBadge = document.createElement("div");
         ripBadge.className = "hex rip";
         ripBadge.textContent = code;
-        ripDiv.appendChild(ripBadge);
 
+        ripDiv.appendChild(ripBadge);
         renderedDeaths.add(code);
       });
     }
@@ -152,7 +157,7 @@ function renderTimeline(data) {
 
     stepEl.appendChild(row);
 
-    // Notes field
+    /* --- Notes --- */
     if (step.Notes && step.Notes.trim() !== "") {
       const notesEl = document.createElement("div");
       notesEl.className = "step-notes";
