@@ -77,26 +77,27 @@ function renderTimeline(data) {
     Object.entries(step).forEach(([field, value]) => {
       if (NON_LOCATION_FIELDS.includes(field)) return;
 
-      const chars = value
-        ? value
-            .replace(/"/g, "")
-            .split(",")
-            .map(v => v.trim())
-            .filter(Boolean)
+      // Preserve empty entries to create spacers
+      const rawEntries = value
+        ? value.replace(/"/g, "").split(",")
         : [];
 
+      const charsOnly = rawEntries
+        .map(v => v.trim())
+        .filter(Boolean);
+
       currentStepLocations[field] = {
-        chars: [...chars].sort()
+        chars: [...charsOnly].sort()
       };
 
-      /* --- Skip empty locations --- */
-      if (chars.length === 0) return;
+      // Skip empty locations
+      if (charsOnly.length === 0) return;
 
       const prev = prevStepLocations[field] || { chars: [] };
       const charsChanged =
         prev.chars.join(",") !== currentStepLocations[field].chars.join(",");
 
-      /* --- Only render if something changed --- */
+      // Only render if something changed
       if (!charsChanged) return;
 
       const box = document.createElement("div");
@@ -107,7 +108,17 @@ function renderTimeline(data) {
       const badges = document.createElement("div");
       badges.className = "badges";
 
-      chars.forEach(code => {
+      rawEntries.forEach(entry => {
+        const code = entry.trim();
+
+        // Spacer logic
+        if (!code) {
+          const spacer = document.createElement("div");
+          spacer.className = "badge-spacer";
+          badges.appendChild(spacer);
+          return;
+        }
+
         const badge = document.createElement("div");
         badge.className = "hex";
         badge.textContent = code;
@@ -122,7 +133,7 @@ function renderTimeline(data) {
       row.appendChild(box);
     });
 
-    /* --- RIP badges (placed at last known location) --- */
+    /* --- RIP badges --- */
     if (step.Dead && step.Dead.trim() !== "") {
       const deadChars = step.Dead
         .replace(/"/g, "")
