@@ -174,3 +174,51 @@ body {
   height: 1px;
 }
 
+/* Less spacing between steps */
+.timeline-step {
+  margin: 15px 0;    /* smaller gap between steps */
+}
+
+/* More spacing when there's a book label */
+.timeline-step .step-label {
+  margin-bottom: 30px; /* extra space before content for new book */
+}
+
+.location-row {
+  display: flex;
+  justify-content: center;  /* center the boxes horizontally */
+  gap: 18px;                /* consistent spacing between boxes */
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.location-box {
+  text-align: center;      /* center text inside the box */
+}
+
+.badges {
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.location-box {
+  padding: 10px 14px;
+  margin: 0 auto;
+}
+
+.step-notes {
+  text-align: center;
+  margin-top: 8px;
+  font-style: italic;
+  color: #444;
+  font-size: 0.9em;
+}
+
+.rip-line {
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+  margin-top: 4px;
+}
