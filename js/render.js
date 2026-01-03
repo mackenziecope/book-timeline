@@ -88,11 +88,18 @@ function renderTimeline(data) {
         dead: [...newDead].sort()
       };
 
-      // Only render box if characters changed or someone died
+      // Skip rendering if location is empty (no chars and no new deaths)
+      if (chars.length === 0 && newDead.length === 0) return;
+
+      // Only render box if:
+      // 1. First appearance, or
+      // 2. Characters changed OR new death occurred
       const prev = prevStepLocations[field] || { chars: [], dead: [] };
       const charsChanged = prev.chars.join(",") !== chars.join(",");
       const deadChanged = prev.dead.join(",") !== newDead.join(",");
-      if (!charsChanged && !deadChanged) return;
+      const isFirstAppearance = !prevStepLocations[field];
+
+      if (!isFirstAppearance && !charsChanged && !deadChanged) return;
 
       const box = document.createElement("div");
       box.className = "location-box";
