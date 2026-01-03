@@ -2,7 +2,6 @@ const SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTj4mIQNa
 const CHARACTERS_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTj4mIQNaRGqy8JbMyAHjDnQH-BbAry72Mtqrt3oxVvp8buPELwwgfHXlb7eBRHBOsAZ010z8Sl5Vd5/pub?gid=1645073460&single=true&output=csv";
 
 const container = document.getElementById("timeline-map");
-
 const NON_LOCATION_FIELDS = ["Book", "step_id", "Order", "Notes", "Dead"];
 
 /* --- Factions --- */
@@ -11,10 +10,8 @@ const FACTIONS = {
   adarlan: { color: "#C62828" },
   neutral: { color: "#777" }
 };
-
 const DEFAULT_FACTION = {};
 const FACTION_OVERRIDES = {};
-
 function getFaction(character, stepId) {
   return (
     FACTION_OVERRIDES[stepId]?.[character] ||
@@ -25,7 +22,9 @@ function getFaction(character, stepId) {
 
 /* --- Track RIP badges --- */
 const renderedDeaths = new Set();
-const characterOrderMap = {}; // <- this is your new global
+
+/* --- Character ordering --- */
+const characterOrderMap = {};
 
 /* --- Book labels --- */
 const BOOK_LABELS = {
@@ -37,25 +36,19 @@ const BOOK_LABELS = {
   5.5: "5.5 - Empire of Storms / Tower of Dawn",
   7: "7 - Kingdom of Ash"
 };
-
 const firstStepPerBook = {};
 let prevStepLocations = {};
 
+/* --- Load data --- */
 document.addEventListener("DOMContentLoaded", () => {
   Promise.all([
     fetch(SHEET_CSV_URL).then(res => res.text()),
     fetch(CHARACTERS_CSV_URL).then(res => res.text())
   ]).then(([timelineText, characterText]) => {
-    const timelineParsed = Papa.parse(timelineText, {
-      header: true,
-      skipEmptyLines: true
-    });
+    const timelineParsed = Papa.parse(timelineText, { header: true, skipEmptyLines: true });
+    const characterParsed = Papa.parse(characterText, { header: true, skipEmptyLines: true });
 
-    const characterParsed = Papa.parse(characterText, {
-      header: true,
-      skipEmptyLines: true
-    });
-
+    // Build character ordering map
     characterParsed.data.forEach(row => {
       if (!row.code) return;
       characterOrderMap[row.code.trim()] = Number(row.order) || 999;
@@ -90,26 +83,20 @@ function renderTimeline(data) {
     Object.entries(step).forEach(([field, value]) => {
       if (NON_LOCATION_FIELDS.includes(field)) return;
 
-      // Preserve empty entries to create spacers
-      const rawEntries = value
-        ? value.replace(/"/g, "").split(",")
-        : [];
-      
-      // Sort character entries by priority, keep spacers
+      // Prepare raw entries, preserve empty spaces
+      const rawEntries = value ? value.replace(/"/g, "").split(",") : [];
+      const entriesTrimmed = rawEntries.map(v => v.trim());
+
+      // Separate non-empty characters and sort by order
+      const characters = entriesTrimmed
+        .filter(v => v)
+        .sort((a, b) => (characterOrderMap[a] ?? 999) - (characterOrderMap[b] ?? 999));
+
+      // Rebuild sortedEntries with spacers intact
       const sortedEntries = [];
-      const characters = rawEntries
-        .map(v => v.trim())
-        .filter(Boolean)
-        .sort((a, b) => {
-          return (
-            (characterOrderMap[a] ?? 999) -
-            (characterOrderMap[b] ?? 999)
-          );
-        });
-      
       let charIndex = 0;
-        sortedEntries.forEach(entry => {
-        if (!entry.trim()) {
+      entriesTrimmed.forEach(entry => {
+        if (!entry) {
           sortedEntries.push(""); // spacer
         } else {
           sortedEntries.push(characters[charIndex]);
@@ -117,36 +104,30 @@ function renderTimeline(data) {
         }
       });
 
-      const charsOnly = rawEntries
-        .map(v => v.trim())
-        .filter(Boolean);
+      // Track current step for change detection
+      const charsOnly = entriesTrimmed.filter(v => v);
+      currentStepLocations[field] = { chars: [...charsOnly].sort() };
 
-      currentStepLocations[field] = {
-        chars: [...charsOnly].sort()
-      };
-
-      // Skip empty locations
+      // Skip rendering empty locations
       if (charsOnly.length === 0) return;
 
+      // Compare with previous step
       const prev = prevStepLocations[field] || { chars: [] };
-      const charsChanged =
-        prev.chars.join(",") !== currentStepLocations[field].chars.join(",");
+      const charsChanged = prev.chars.join(",") !== currentStepLocations[field].chars.join(",");
 
-      // Only render if something changed
-      if (!charsChanged) return;
+      if (!charsChanged && stepIndex !== 0) return; // only show if changed or first step
 
+      // Render box
       const box = document.createElement("div");
       box.className = "location-box";
       box.dataset.location = field;
       box.innerHTML = `<div class="location-title">${field}</div>`;
 
+      // Render badges
       const badges = document.createElement("div");
       badges.className = "badges";
 
-      rawEntries.forEach(entry => {
-        const code = entry.trim();
-
-        // Spacer logic
+      sortedEntries.forEach(code => {
         if (!code) {
           const spacer = document.createElement("div");
           spacer.className = "badge-spacer";
@@ -157,10 +138,10 @@ function renderTimeline(data) {
         const badge = document.createElement("div");
         badge.className = "hex";
         badge.textContent = code;
-        badge.style.backgroundColor =
-          FACTIONS[getFaction(code, stepIndex)].color;
-
+        badge.style.backgroundColor = FACTIONS[getFaction(code, stepIndex)].color;
         badges.appendChild(badge);
+
+        // Track last box for RIP
         lastLocationBoxMap[code] = box;
       });
 
@@ -170,12 +151,7 @@ function renderTimeline(data) {
 
     /* --- RIP badges --- */
     if (step.Dead && step.Dead.trim() !== "") {
-      const deadChars = step.Dead
-        .replace(/"/g, "")
-        .split(",")
-        .map(v => v.trim())
-        .filter(Boolean);
-
+      const deadChars = step.Dead.replace(/"/g, "").split(",").map(v => v.trim()).filter(Boolean);
       deadChars.forEach(code => {
         if (renderedDeaths.has(code)) return;
 
@@ -193,8 +169,8 @@ function renderTimeline(data) {
         const ripBadge = document.createElement("div");
         ripBadge.className = "hex rip";
         ripBadge.textContent = code;
-
         ripDiv.appendChild(ripBadge);
+
         renderedDeaths.add(code);
       });
     }
