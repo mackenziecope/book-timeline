@@ -1,118 +1,150 @@
-/* --- Timeline Page Title --- */
-.timeline-title {
-  font-size: 2rem;
-  font-weight: bold;
-  margin-bottom: 24px;
-  text-align: center;
-}
-
-/* --- Page Layout --- */
-body {
-  margin: 0;
-  padding: 0;
-  display: flex;
-  justify-content: center;
-  background: #fff;
-  font-family: Arial, sans-serif;
-}
-
-#timeline-map {
-  width: calc(100% - 400px); /* 200px margin on left + right */
-  max-width: 1400px;         /* optional cap for very large screens */
-  margin: 0 auto;
-  text-align: center;        /* center text and elements */
-  padding: 30px 0;           /* 30px top and bottom on the whole container */
-}
-
-/* --- Timeline Page Title --- */
-.timeline-title {
-  font-size: 2rem;
-  font-weight: bold;
-  margin-bottom: 24px;
-  text-align: center;
-}
-
+/* =========================
+   PAGE LAYOUT
+   ========================= */
 body {
   font-family: sans-serif;
   margin: 0;
   padding: 0;
 }
 
+/* =========================
+   TIMELINE CONTAINER
+   ========================= */
 #timeline-map {
   display: flex;
   flex-direction: column;
-  gap: 20px;
-  padding: 20px;
+  gap: 40px; /* spacing between steps */
+  padding: 20px 200px; /* 200px margin left/right, 20px padding */
+  font-family: sans-serif;
+  align-items: center; /* center content horizontally */
 }
 
+/* =========================
+   STEP / BOOK LABELS
+   ========================= */
 .timeline-step {
   display: flex;
   flex-direction: column;
   gap: 10px;
+  margin-bottom: 60px; /* reduce spacing between steps, bigger spacing between books handled in JS */
 }
 
 .step-label {
+  font-size: 1.5rem;
   font-weight: bold;
-  font-size: 20px;
-  margin-bottom: 5px;
+  margin-bottom: 10px;
+  text-align: center;
 }
 
+/* =========================
+   LOCATION ROWS
+   ========================= */
 .location-row {
   display: flex;
   flex-wrap: wrap;
-  gap: 15px;
+  gap: 20px; /* spacing between location boxes */
+  justify-content: center; /* center align all boxes in row */
 }
 
+/* =========================
+   LOCATION BOX
+   ========================= */
 .location-box {
-  border: 1px solid #ccc;
+  border: 2px solid #aaa;
+  border-radius: 8px;
   padding: 10px;
   min-width: 120px;
   display: flex;
   flex-direction: column;
-  align-items: center;
+  align-items: flex-start;
+  background-color: #f9f9f9;
 }
 
+/* Location title inside box */
 .location-title {
   font-weight: bold;
-  margin-bottom: 5px;
+  margin-bottom: 6px;
 }
 
+/* =========================
+   BADGES (CHARACTERS)
+   ========================= */
 .badges {
   display: flex;
   flex-wrap: wrap;
-  gap: 5px;
+  gap: 4px; /* spacing between badges */
   justify-content: center;
 }
 
+/* Hexagonal badge shape */
 .hex {
-  width: 50px;
-  height: 43.3px; /* equilateral hexagon */
-  clip-path: polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%);
+  width: 36px;
+  height: 36px;
+  clip-path: polygon(
+    25% 6.7%,
+    75% 6.7%,
+    100% 50%,
+    75% 93.3%,
+    25% 93.3%,
+    0% 50%
+  );
   display: flex;
   justify-content: center;
   align-items: center;
-  font-size: 16px;
-  color: white;
+  color: #fff;
+  font-size: 0.8rem;
+  font-weight: bold;
 }
 
-.rip {
-  margin-top: 5px;
+/* =========================
+   RIP BADGES
+   ========================= */
+.rip-line {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 4px;
+  font-size: 0.9rem;
+  color: #555;
 }
 
+.hex.rip {
+  width: 18px; /* smaller than normal badges */
+  height: 18px;
+  font-size: 0.6rem;
+  background-color: #888 !important; /* med-dark gray */
+  opacity: 0.6;
+}
+
+/* Optional label for RIP */
 .rip-label {
   font-size: 12px;
   margin-bottom: 2px;
 }
 
-/* Smaller RIP hexes */
-.rip .hex {
-  width: 25px;
-  height: 21.65px;
-  font-size: 8px;
-  background-color: #6b6f8f !important;
+/* =========================
+   BADGE SPACERS
+   ========================= */
+.badge-spacer {
+  width: 36px;
+  height: 36px;
+  background: transparent; /* invisible gap */
 }
 
-/* --- Flow line layer --- */
+/* =========================
+   NOTES FIELD
+   ========================= */
+.step-notes {
+  margin-top: 6px;
+  font-style: italic;
+  color: #333;
+  font-size: 0.85rem;
+  text-align: center;
+}
+
+/* =========================
+   FLOW LAYER (if used for lines)
+   ========================= */
 #flow-layer {
   position: absolute;
   top: 0;
@@ -129,96 +161,4 @@ body {
 .location-box {
   position: relative;
   z-index: 2;
-}
-
-/* Extra vertical breathing room between steps */
-.timeline-step {
-  margin-bottom: 80px;
-}
-
-/* ===============================
-   RIP badges
-   =============================== */
-
-.rip-line {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  margin-top: 6px;
-  font-size: 0.7rem;
-  color: #555;
-}
-
-.rip-line span {
-  font-weight: 600;
-  white-space: nowrap;
-}
-
-/* RIP hex: smaller + gray */
-.hex.rip {
-  background-color: #666 !important;
-  color: #fff !important;
-  border: 1px solid #444;
-  opacity: 1 !important;
-  visibility: visible !important;
-
-  width: 22px;
-  height: 22px;
-  font-size: 0.6rem;
-}
-
-/* Normal hexes stay unchanged */
-
-.badge-spacer {
-  width: 16px;
-  height: 1px;
-}
-
-/* Less spacing between steps */
-.timeline-step {
-  margin: 15px 0;    /* smaller gap between steps */
-}
-
-/* More spacing when there's a book label */
-.timeline-step .step-label {
-  margin-bottom: 30px; /* extra space before content for new book */
-}
-
-.location-row {
-  display: flex;
-  justify-content: center;  /* center the boxes horizontally */
-  gap: 18px;                /* consistent spacing between boxes */
-  align-items: center;
-  flex-wrap: wrap;
-}
-
-.location-box {
-  text-align: center;      /* center text inside the box */
-}
-
-.badges {
-  display: flex;
-  justify-content: center;
-  gap: 6px;
-  flex-wrap: wrap;
-}
-
-.location-box {
-  padding: 10px 14px;
-  margin: 0 auto;
-}
-
-.step-notes {
-  text-align: center;
-  margin-top: 8px;
-  font-style: italic;
-  color: #444;
-  font-size: 0.9em;
-}
-
-.rip-line {
-  display: flex;
-  justify-content: center;
-  gap: 6px;
-  margin-top: 4px;
 }
