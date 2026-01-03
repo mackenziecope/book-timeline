@@ -86,9 +86,14 @@ function renderTimeline(data) {
       // Skip box if empty (no chars) AND not first appearance
       const prev = prevStepLocations[field] || { chars: [] };
       const charsChanged = prev.chars.join(",") !== chars.join(",");
-      const isFirstAppearance = !prevStepLocations[field];
+      const isFirstStep = stepIndex === 0;
+      
+      // Step 0: only show populated locations
+      if (isFirstStep && chars.length === 0 && newDead.length === 0) return;
+      
+      // All other steps: only show if something changed
+      if (!isFirstStep && !charsChanged && !deadChanged) return;
 
-      if (chars.length === 0 && !isFirstAppearance) return;
       if (!isFirstAppearance && !charsChanged) return;
 
       // Render box
