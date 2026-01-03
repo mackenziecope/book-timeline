@@ -51,6 +51,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
 /* --- Render timeline --- */
 function renderTimeline(data) {
+  // Track last known boxes for all characters (for RIP placement)
+  const lastLocationBoxMap = {};
+
   data.forEach((step, stepIndex) => {
     const stepEl = document.createElement("section");
     stepEl.className = "timeline-step";
@@ -68,14 +71,6 @@ function renderTimeline(data) {
 
     const currentStepLocations = {};
 
-    // First, build a map of last known boxes for normal characters
-    const lastLocationBoxMap = {};
-    for (const loc in prevStepLocations) {
-      prevStepLocations[loc].chars.forEach(code => {
-        lastLocationBoxMap[code] = prevStepLocations[loc].boxEl;
-      });
-    }
-
     Object.entries(step).forEach(([field, value]) => {
       if (NON_LOCATION_FIELDS.includes(field)) return;
 
@@ -84,28 +79,19 @@ function renderTimeline(data) {
         ? value.replace(/"/g, "").split(",").map(v => v.trim()).filter(Boolean)
         : [];
 
-      // Dead characters at this step
-      const deadChars = step.Dead
-        ? step.Dead.replace(/"/g, "").split(",").map(v => v.trim()).filter(Boolean)
-        : [];
-      const newDead = deadChars.filter(code => !renderedDeaths.has(code));
-
-      // Store for comparison with previous step
       currentStepLocations[field] = {
-        chars: [...chars].sort(),
-        dead: [...newDead].sort()
+        chars: [...chars].sort()
       };
 
-      // Skip rendering if location is empty (no chars and no new deaths)
-      if (chars.length === 0 && newDead.length === 0) return;
-
-      // Only render box if first appearance, or characters changed, or new death occurred
-      const prev = prevStepLocations[field] || { chars: [], dead: [] };
+      // Skip box if empty (no chars) AND not first appearance
+      const prev = prevStepLocations[field] || { chars: [] };
       const charsChanged = prev.chars.join(",") !== chars.join(",");
-      const deadChanged = prev.dead.join(",") !== newDead.join(",");
       const isFirstAppearance = !prevStepLocations[field];
-      if (!isFirstAppearance && !charsChanged && !deadChanged) return;
 
+      if (chars.length === 0 && !isFirstAppearance) return;
+      if (!isFirstAppearance && !charsChanged) return;
+
+      // Render box
       const box = document.createElement("div");
       box.className = "location-box";
       box.dataset.location = field;
@@ -121,21 +107,21 @@ function renderTimeline(data) {
           badge.textContent = code;
           badge.style.backgroundColor = FACTIONS[getFaction(code, stepIndex)].color;
           badges.appendChild(badge);
+
+          // Update last known location
+          lastLocationBoxMap[code] = box;
         });
         box.appendChild(badges);
       }
 
       row.appendChild(box);
-
-      // Update lastLocationBoxMap for new chars
-      chars.forEach(code => lastLocationBoxMap[code] = box);
     });
 
-    // --- RIP badges ---
+    // --- Handle RIP badges ---
     if (step.Dead && step.Dead.trim() !== "") {
       const deadChars = step.Dead.replace(/"/g, "").split(",").map(v => v.trim()).filter(Boolean);
       deadChars.forEach(code => {
-        if (renderedDeaths.has(code)) return; // already displayed
+        if (renderedDeaths.has(code)) return;
 
         const lastBox = lastLocationBoxMap[code];
         if (!lastBox) return;
