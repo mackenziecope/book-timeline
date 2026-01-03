@@ -68,6 +68,14 @@ function renderTimeline(data) {
 
     const currentStepLocations = {};
 
+    // First, build a map of last known boxes for normal characters
+    const lastLocationBoxMap = {};
+    for (const loc in prevStepLocations) {
+      prevStepLocations[loc].chars.forEach(code => {
+        lastLocationBoxMap[code] = prevStepLocations[loc].boxEl;
+      });
+    }
+
     Object.entries(step).forEach(([field, value]) => {
       if (NON_LOCATION_FIELDS.includes(field)) return;
 
@@ -91,14 +99,11 @@ function renderTimeline(data) {
       // Skip rendering if location is empty (no chars and no new deaths)
       if (chars.length === 0 && newDead.length === 0) return;
 
-      // Only render box if:
-      // 1. First appearance, or
-      // 2. Characters changed OR new death occurred
+      // Only render box if first appearance, or characters changed, or new death occurred
       const prev = prevStepLocations[field] || { chars: [], dead: [] };
       const charsChanged = prev.chars.join(",") !== chars.join(",");
       const deadChanged = prev.dead.join(",") !== newDead.join(",");
       const isFirstAppearance = !prevStepLocations[field];
-
       if (!isFirstAppearance && !charsChanged && !deadChanged) return;
 
       const box = document.createElement("div");
@@ -120,23 +125,37 @@ function renderTimeline(data) {
         box.appendChild(badges);
       }
 
-      // RIP badges
-      if (newDead.length) {
-        const ripDiv = document.createElement("div");
-        ripDiv.className = "rip-line";
-        ripDiv.innerHTML = `<span>RIP:</span>`;
-        newDead.forEach(code => {
-          const ripBadge = document.createElement("div");
-          ripBadge.className = "hex rip";
-          ripBadge.textContent = code;
-          ripDiv.appendChild(ripBadge);
-          renderedDeaths.add(code);
-        });
-        box.appendChild(ripDiv);
-      }
-
       row.appendChild(box);
+
+      // Update lastLocationBoxMap for new chars
+      chars.forEach(code => lastLocationBoxMap[code] = box);
     });
+
+    // --- RIP badges ---
+    if (step.Dead && step.Dead.trim() !== "") {
+      const deadChars = step.Dead.replace(/"/g, "").split(",").map(v => v.trim()).filter(Boolean);
+      deadChars.forEach(code => {
+        if (renderedDeaths.has(code)) return; // already displayed
+
+        const lastBox = lastLocationBoxMap[code];
+        if (!lastBox) return;
+
+        let ripDiv = lastBox.querySelector(".rip-line");
+        if (!ripDiv) {
+          ripDiv = document.createElement("div");
+          ripDiv.className = "rip-line";
+          ripDiv.innerHTML = `<span>RIP:</span>`;
+          lastBox.appendChild(ripDiv);
+        }
+
+        const ripBadge = document.createElement("div");
+        ripBadge.className = "hex rip";
+        ripBadge.textContent = code;
+        ripDiv.appendChild(ripBadge);
+
+        renderedDeaths.add(code);
+      });
+    }
 
     prevStepLocations = currentStepLocations;
 
