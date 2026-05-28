@@ -2,16 +2,17 @@ const SHEET_CSV_URL =
   "https://docs.google.com/spreadsheets/d/e/2PACX-1vTj4mIQNaRGqy8JbMyAHjDnQH-BbAry72Mtqrt3oxVvp8buPELwwgfHXlb7eBRHBOsAZ010z8Sl5Vd5/pub?gid=0&single=true&output=csv";
 const CHARACTERS_CSV_URL =
   "https://docs.google.com/spreadsheets/d/e/2PACX-1vTj4mIQNaRGqy8JbMyAHjDnQH-BbAry72Mtqrt3oxVvp8buPELwwgfHXlb7eBRHBOsAZ010z8Sl5Vd5/pub?gid=1645073460&single=true&output=csv";
+const FACTIONS_CSV_URL =
+  "https://docs.google.com/spreadsheets/d/e/2PACX-1vTj4mIQNaRGqy8JbMyAHjDnQH-BbAry72Mtqrt3oxVvp8buPELwwgfHXlb7eBRHBOsAZ010z8Sl5Vd5/pub?gid=805785660&single=true&output=csv";
+const LOCATIONS_CSV_URL =
+  "https://docs.google.com/spreadsheets/d/e/2PACX-1vTj4mIQNaRGqy8JbMyAHjDnQH-BbAry72Mtqrt3oxVvp8buPELwwgfHXlb7eBRHBOsAZ010z8Sl5Vd5/pub?gid=1557750733&single=true&output=csv";
 
 const container = document.getElementById("timeline-map");
 const NON_LOCATION_FIELDS = ["Book", "step_id", "Order", "Notes", "Dead"];
 
 /* --- Factions --- */
-const FACTIONS = {
-  terrasen: { color: "#4CAF50" },
-  adarlan: { color: "#777" }, // gray for default
-  neutral: { color: "#999" }
-};
+let FACTIONS = {};
+let LOCATION_DEFAULT_FACTIONS = {};
 
 const DEFAULT_FACTION = {};
 const FACTION_OVERRIDES = {};
@@ -50,10 +51,30 @@ let prevStepLocations = {};
 document.addEventListener("DOMContentLoaded", () => {
   Promise.all([
     fetch(SHEET_CSV_URL).then(res => res.text()),
-    fetch(CHARACTERS_CSV_URL).then(res => res.text())
-  ]).then(([timelineText, characterText]) => {
+    fetch(CHARACTERS_CSV_URL).then(res => res.text()),
+    fetch(FACTIONS_CSV_URL).then(res => res.text()),
+    fetch(LOCATIONS_CSV_URL).then(res => res.text())
+  ]).then(([timelineText, characterText, factionsText, locationsText]) => {
     const timelineParsed = Papa.parse(timelineText, { header: true, skipEmptyLines: true });
     const characterParsed = Papa.parse(characterText, { header: true, skipEmptyLines: true });
+    const factionsParsed = Papa.parse(factionsText, { header: true, skipEmptyLines: true });
+    const locationsParsed = Papa.parse(locationsText, { header: true, skipEmptyLines: true });
+
+    // Load factions with hex colors
+    factionsParsed.data.forEach(row => {
+      if (row.default_faction && row.hex) {
+        FACTIONS[row.default_faction.trim().toLowerCase()] = {
+          color: "#" + row.hex.trim()
+        };
+      }
+    });
+
+    // Load location default factions
+    locationsParsed.data.forEach(row => {
+      if (row.Location && row.default_faction) {
+        LOCATION_DEFAULT_FACTIONS[row.Location.trim()] = row.default_faction.trim().toLowerCase();
+      }
+    });
 
     // Load character order
     characterParsed.data.forEach(row => {
@@ -125,6 +146,11 @@ function renderTimeline(data) {
       box.dataset.location = field;
       box.innerHTML = `<div class="location-title">${field}</div>`;
 
+      // Get location's default faction for box color
+      const locationFaction = LOCATION_DEFAULT_FACTIONS[field] || "neutral";
+      const boxColor = FACTIONS[locationFaction]?.color || "#999";
+      box.style.borderColor = boxColor;
+
       // --- Normal badges ---
       if (finalEntries.length) {
         const badges = document.createElement("div");
@@ -139,7 +165,8 @@ function renderTimeline(data) {
           const badge = document.createElement("div");
           badge.className = "hex";
           badge.textContent = code;
-          badge.style.backgroundColor = FACTIONS[getFaction(code, stepIndex)].color;
+          const factionKey = getFaction(code, stepIndex);
+          badge.style.backgroundColor = FACTIONS[factionKey]?.color || "#999";
           badges.appendChild(badge);
         });
         box.appendChild(badges);
