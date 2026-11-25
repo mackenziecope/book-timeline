@@ -28,3 +28,24 @@ const STORIES = {
 };
 
 const DEFAULT_STORY_KEY = "throne-of-glass";
+
+"potc": {
+    title: "Pirates of the Caribbean Timeline",
+    heading: "A Logistical Record of Pirates of the Caribbean",
+    stylesheet: "css/potc.css",
+    sheets: {
+      timeline:
+        "https://docs.google.com/spreadsheets/d/e/2PACX-1vRm2A7AjU24PenOMYQ6Zokr3qIsBqQjJFcbkvLfPX2Bm3Ir6GTcs9V6YgpQ0nG3btyKX3H4dIWkPK57/pub?gid=0&single=true&output=csv",
+      // Optional: update these gids once you add/format Characters, Factions, or Locations tabs
+      characters: "",
+      factions: "",
+      locations: ""
+    },
+    bookLabels: {
+      1: "1 - The Curse of the Black Pearl",
+      2: "2 - Dead Man's Chest",
+      3: "3 - At World's End"
+    },
+    defaultFactions: {},
+    factionOverrides: {}
+  }
