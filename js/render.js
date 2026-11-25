@@ -1,21 +1,23 @@
-const SHEET_CSV_URL =
-  "https://docs.google.com/spreadsheets/d/e/2PACX-1vTj4mIQNaRGqy8JbMyAHjDnQH-BbAry72Mtqrt3oxVvp8buPELwwgfHXlb7eBRHBOsAZ010z8Sl5Vd5/pub?gid=0&single=true&output=csv";
-const CHARACTERS_CSV_URL =
-  "https://docs.google.com/spreadsheets/d/e/2PACX-1vTj4mIQNaRGqy8JbMyAHjDnQH-BbAry72Mtqrt3oxVvp8buPELwwgfHXlb7eBRHBOsAZ010z8Sl5Vd5/pub?gid=1645073460&single=true&output=csv";
-const FACTIONS_CSV_URL =
-  "https://docs.google.com/spreadsheets/d/e/2PACX-1vTj4mIQNaRGqy8JbMyAHjDnQH-BbAry72Mtqrt3oxVvp8buPELwwgfHXlb7eBRHBOsAZ010z8Sl5Vd5/pub?gid=805785660&single=true&output=csv";
-const LOCATIONS_CSV_URL =
-  "https://docs.google.com/spreadsheets/d/e/2PACX-1vTj4mIQNaRGqy8JbMyAHjDnQH-BbAry72Mtqrt3oxVvp8buPELwwgfHXlb7eBRHBOsAZ010z8Sl5Vd5/pub?gid=1557750733&single=true&output=csv";
-
 const container = document.getElementById("timeline-map");
 const NON_LOCATION_FIELDS = ["Book", "step_id", "Order", "Notes", "Dead"];
 
-/* --- Factions --- */
+/* --- Resolve active story from ?story=<key> --- */
+const params = new URLSearchParams(window.location.search);
+const storyKey = params.get("story") || DEFAULT_STORY_KEY;
+const activeStory = STORIES[storyKey] || STORIES[DEFAULT_STORY_KEY];
+
+/* --- State --- */
 let FACTIONS = {};
 let LOCATION_DEFAULT_FACTIONS = {};
+const DEFAULT_FACTION = activeStory.defaultFactions || {};
+const FACTION_OVERRIDES = activeStory.factionOverrides || {};
+const BOOK_LABELS = activeStory.bookLabels || {};
 
-const DEFAULT_FACTION = {};
-const FACTION_OVERRIDES = {};
+const renderedDeaths = new Set();
+const characterOrderMap = {};
+const firstStepPerBook = {};
+let prevStepLocations = {};
+
 function getFaction(character, stepId) {
   return (
     FACTION_OVERRIDES[stepId]?.[character] ||
@@ -24,36 +26,46 @@ function getFaction(character, stepId) {
   );
 }
 
-/* --- Track RIP badges --- */
-const renderedDeaths = new Set();
+function fetchOptionalCsv(url) {
+  if (!url) return Promise.resolve("");
+  return fetch(url)
+    .then(res => (res.ok ? res.text() : ""))
+    .catch(() => "");
+}
 
-/* --- Character ordering --- */
-const characterOrderMap = {};
+function applyStoryMetadata() {
+  document.title = activeStory.title;
+  const headingEl = document.getElementById("timeline-heading");
+  if (headingEl) headingEl.textContent = activeStory.heading;
 
-/* --- Book labels --- */
-const BOOK_LABELS = {
-  0: "0 - Assassin's Blade",
-  1: "1 - Throne of Glass",
-  2: "2 - Crown of Midnight",
-  3: "3 - Heir of Fire",
-  4: "4 - Queen of Shadows",
-  5.5: "5.5 - Empire of Storms / Tower of Dawn",
-  7: "7 - Kingdom of Ash"
-};
+  const stylesheetEl = document.getElementById("story-stylesheet");
+  if (stylesheetEl && activeStory.stylesheet) {
+    stylesheetEl.href = activeStory.stylesheet;
+  }
 
-/* --- Track first step per book --- */
-const firstStepPerBook = {};
-
-/* --- Track previous step's location content --- */
-let prevStepLocations = {};
+  // Render quick switcher links for all registered stories
+  const navEl = document.getElementById("story-nav");
+  if (navEl && Object.keys(STORIES).length > 1) {
+    navEl.innerHTML = Object.entries(STORIES)
+      .map(([key, cfg]) => {
+        const activeClass = key === storyKey ? "active" : "";
+        return `<a href="?story=${encodeURIComponent(key)}" class="${activeClass}">${cfg.title}</a>`;
+      })
+      .join(" | ");
+  }
+}
 
 /* --- Load CSVs --- */
 document.addEventListener("DOMContentLoaded", () => {
+  applyStoryMetadata();
+
+  const { timeline, characters, factions, locations } = activeStory.sheets;
+
   Promise.all([
-    fetch(SHEET_CSV_URL).then(res => res.text()),
-    fetch(CHARACTERS_CSV_URL).then(res => res.text()),
-    fetch(FACTIONS_CSV_URL).then(res => res.text()),
-    fetch(LOCATIONS_CSV_URL).then(res => res.text())
+    fetch(timeline).then(res => res.text()),
+    fetchOptionalCsv(characters),
+    fetchOptionalCsv(factions),
+    fetchOptionalCsv(locations)
   ]).then(([timelineText, characterText, factionsText, locationsText]) => {
     const timelineParsed = Papa.parse(timelineText, { header: true, skipEmptyLines: true });
     const characterParsed = Papa.parse(characterText, { header: true, skipEmptyLines: true });
@@ -64,7 +76,7 @@ document.addEventListener("DOMContentLoaded", () => {
     factionsParsed.data.forEach(row => {
       if (row.default_faction && row.hex) {
         FACTIONS[row.default_faction.trim().toLowerCase()] = {
-          color: "#" + row.hex.trim()
+          color: "#" + row.hex.trim().replace(/^#/, "")
         };
       }
     });
@@ -89,13 +101,16 @@ document.addEventListener("DOMContentLoaded", () => {
 /* --- Render timeline --- */
 function renderTimeline(data) {
   data.forEach((step, stepIndex) => {
+    // Skip separator rows (like "-" in step_id with no Book)
+    if (!step.Book || step.Book.trim() === "") return;
+
     const stepEl = document.createElement("section");
     stepEl.className = "timeline-step";
 
-    // Book label only at first step of each book
-    const bookNum = step.Book;
-    if (bookNum !== "" && !firstStepPerBook[bookNum]) {
-      const labelText = BOOK_LABELS[bookNum] || `Book ${bookNum}`;
+    // Book/Movie label only at first step of each entry
+    const bookNum = step.Book.trim();
+    if (!firstStepPerBook[bookNum]) {
+      const labelText = BOOK_LABELS[bookNum] || `Part ${bookNum}`;
       stepEl.innerHTML = `<div class="step-label">${labelText}</div>`;
       firstStepPerBook[bookNum] = true;
     }
@@ -108,31 +123,26 @@ function renderTimeline(data) {
     Object.entries(step).forEach(([field, value]) => {
       if (NON_LOCATION_FIELDS.includes(field)) return;
 
-      // Raw entries including blank spaces
       const rawEntries = value ? value.replace(/"/g, "").split(",") : [];
       const chars = rawEntries.map(v => v.trim()).filter(Boolean);
 
-      // Sort characters using characterOrderMap
       const sortedChars = [...chars].sort(
         (a, b) => (characterOrderMap[a] ?? 999) - (characterOrderMap[b] ?? 999)
       );
 
-      // Merge sorted characters with blanks to preserve spacing
       const finalEntries = [];
       let charIndex = 0;
       rawEntries.forEach(e => {
         if (!e.trim()) {
-          finalEntries.push(""); // blank spacer
+          finalEntries.push("");
         } else {
           finalEntries.push(sortedChars[charIndex]);
           charIndex++;
         }
       });
 
-      // Track current step
       currentStepLocations[field] = { chars: [...chars].sort() };
 
-      // Skip empty box
       if (chars.length === 0) return;
 
       const prev = prevStepLocations[field] || { chars: [] };
@@ -140,18 +150,15 @@ function renderTimeline(data) {
       const isFirstAppearance = !prevStepLocations[field];
       if (!isFirstAppearance && !charsChanged) return;
 
-      // --- Render location box ---
       const box = document.createElement("div");
       box.className = "location-box";
       box.dataset.location = field;
       box.innerHTML = `<div class="location-title">${field}</div>`;
 
-      // Get location's default faction for box color
       const locationFaction = LOCATION_DEFAULT_FACTIONS[field] || "neutral";
       const boxColor = FACTIONS[locationFaction]?.color || "#999";
       box.style.borderColor = boxColor;
 
-      // --- Normal badges ---
       if (finalEntries.length) {
         const badges = document.createElement("div");
         badges.className = "badges";
@@ -172,7 +179,6 @@ function renderTimeline(data) {
         box.appendChild(badges);
       }
 
-      // --- RIP badges in the same box ---
       if (step.Dead && step.Dead.trim() !== "") {
         const deadChars = step.Dead.replace(/"/g, "").split(",").map(c => c.trim());
         const deadInThisBox = chars.filter(c => deadChars.includes(c) && !renderedDeaths.has(c));
@@ -196,10 +202,8 @@ function renderTimeline(data) {
     });
 
     prevStepLocations = currentStepLocations;
-
     stepEl.appendChild(row);
 
-    // Notes field
     if (step.Notes && step.Notes.trim() !== "") {
       const notesEl = document.createElement("div");
       notesEl.className = "step-notes";
