@@ -47,6 +47,7 @@
         <button class="legend-tab is-active" id="tab-characters" type="button" role="tab" aria-label="Characters" title="Characters" aria-selected="true" aria-controls="panel-characters" data-tab="characters"><svg class="legend-tab-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8" r="3"/><path d="M3 20c.5-4 2.5-6 6-6s5.5 2 6 6M16 8a2.5 2.5 0 0 1 0 5M17 15c2 .5 3 2 3.5 5"/></svg><span id="legend-character-count" class="legend-tab-count"></span></button>
         <button class="legend-tab" id="tab-locations" type="button" role="tab" aria-label="Locations" title="Locations" aria-selected="false" aria-controls="panel-locations" data-tab="locations" tabindex="-1"><svg class="legend-tab-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 10c0 5-8 12-8 12S4 15 4 10a8 8 0 1 1 16 0Z"/><circle cx="12" cy="10" r="2.5"/></svg><span id="legend-location-count" class="legend-tab-count"></span></button>
         <button class="legend-tab" id="tab-outline" type="button" role="tab" aria-label="Outline" title="Chapter outline" aria-selected="false" aria-controls="panel-outline" data-tab="outline" tabindex="-1"><svg class="legend-tab-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5h12M8 12h12M8 19h12M3 5h.01M3 12h.01M3 19h.01"/></svg></button>
+        <button class="legend-tab" id="tab-guide" type="button" role="tab" aria-label="Quick guide" title="Quick guide" aria-selected="false" aria-controls="panel-guide" data-tab="guide" tabindex="-1"><svg class="legend-tab-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v16H6.5A2.5 2.5 0 0 0 4 21.5z"/><path d="M4 5.5v16M8 7h8M8 11h8"/></svg></button>
       </div>
       <div class="legend-panels">
         <section class="legend-panel" id="panel-characters" role="tabpanel" aria-labelledby="tab-characters">
@@ -56,6 +57,29 @@
           <div id="legend-locations" class="legend-section"></div>
         </section>
         <section class="legend-panel" id="panel-outline" role="tabpanel" aria-labelledby="tab-outline" hidden><ol id="legend-outline" class="legend-outline"></ol></section>
+        <section class="legend-panel legend-guide-panel" id="panel-guide" role="tabpanel" aria-labelledby="tab-guide" hidden>
+          <div class="guide-intro">
+            <p class="guide-eyebrow">Getting started</p>
+            <h2>Explore a story, one scene at a time.</h2>
+            <p>Story Atlas maps where characters appear throughout a story. Follow the timeline, compare locations, and trace a character’s journey.</p>
+          </div>
+          <div class="guide-section">
+            <h3>Read the timeline</h3>
+            <p>Each section represents a point in the story. The location cards show where characters are, and the character badges identify who is there. Colors help distinguish locations and characters by their associated factions.</p>
+            <p>Notes appear alongside a scene when additional context is available. Use the Outline tab to jump to a book or major section.</p>
+          </div>
+          <div class="guide-section">
+            <h3>Explore characters and places</h3>
+            <p>Select a character badge or a character in this Field Guide to highlight that character throughout the timeline. Select a location card or a place in the Field Guide to highlight that place.</p>
+            <p>You can select multiple characters and places at once. Select an item again to remove just that selection, or use <strong>Clear all</strong> to reset your selections.</p>
+          </div>
+          <div class="guide-section">
+            <h3>Make it your own</h3>
+            <p>Use the Characters and Locations tabs to browse what is currently visible in the timeline. Open Settings to change sorting, show all available characters and places, reveal unchanged places, adjust notes and card widths, or switch to dark mode.</p>
+            <p>Use <strong>Choose story</strong> at the top to switch between available story timelines.</p>
+          </div>
+          <p class="guide-tip">Tip: Try selecting a character, then a location. The combined highlights make it easier to follow who was where as the story unfolds.</p>
+        </section>
         <section class="legend-panel legend-settings-panel" id="panel-settings" aria-label="Field guide settings" hidden>
           <div class="legend-settings-options">
             <label class="legend-setting">
