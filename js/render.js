@@ -222,6 +222,7 @@ function initializeStoryMap() {
   const panel = document.getElementById("story-map-panel");
   if (!config || !panel) return;
   panel.hidden = false;
+  document.body.classList.add("has-story-map");
   document.getElementById("story-map-title").textContent = config.title || "Story map";
   const image = document.getElementById("story-map-image");
   image.src = config.image;
