@@ -305,7 +305,7 @@ function initializeDynamicLegend() {
   const settingsToggle = document.getElementById("legend-settings-toggle");
   const outlineEl = document.getElementById("legend-outline");
   const tabPanels = [...legend.querySelectorAll(".legend-panel")];
-  if (!legend || !locationsEl || !charactersEl || !countEl) return;
+  if (!legend || !locationsEl || !charactersEl) return;
   const header = document.querySelector(".site-header");
   const updateHeaderOffset = () => {
     const height = header?.getBoundingClientRect().height || 0;
@@ -438,7 +438,7 @@ function initializeDynamicLegend() {
     const locations = sortLocations([...new Map(sourceBoxes.map(el => [el.dataset.location, el])).values()]);
     const characters = sortCharacters([...new Map(sourceBadges.map(el => [el.dataset.character, el])).entries()]);
     legend.hidden = locations.length === 0 && characters.length === 0;
-    countEl.textContent = "";
+    if (countEl) countEl.textContent = "";
     if (locationCountEl) locationCountEl.textContent = locations.length;
     if (characterCountEl) characterCountEl.textContent = characters.length;
     locationsEl.replaceChildren();
