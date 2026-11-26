@@ -1360,3 +1360,6 @@ body {
 .location-row.standardized-location-widths > .location-box .badges { flex-wrap:wrap; }
 .dark-mode .legend-settings-toggle { color:var(--atlas-ink); border-color:#52616a; }
 @media (max-width:760px) { .legend-heading-actions { top:6px; right:10px; } .legend-settings-toggle { width:31px; height:31px; } .legend-heading strong { padding-right:34px; } }
+
+.timeline-legend.settings-open .legend-tabs { display:none; }
+.timeline-legend.settings-open .legend-settings-panel { display:block; }
