@@ -837,6 +837,8 @@ body {
     order: 0;
     position: sticky;
     top: var(--site-header-height);
+    right: auto;
+    bottom: auto;
     width: 100%;
     max-height: min(32vh, 300px);
     margin: 0;
