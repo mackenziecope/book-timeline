@@ -16,7 +16,7 @@ const locationFactionMap = {};
 const locationFactionColorIndex = {};
 const characterColorMap = {};
 const activeCharacterSelections = new Set();
-let activeLocationSelection = null;
+const activeLocationSelections = new Set();
 const characterOrderMap = {};
 const locationOrderMap = {};
 const locationRowOrderMap = {};
@@ -327,7 +327,7 @@ function initializeDynamicLegend() {
   const addLegendItem = (parent, label, detail, color, shape = "square", type = "", key = "") => {
     const item = document.createElement("button");
     item.type = "button"; item.className = "legend-item"; item.dataset.type = type; item.dataset.key = key;
-    item.setAttribute("aria-pressed", String(type === "character" ? activeCharacterSelections.has(key) : activeLocationSelection === key));
+    item.setAttribute("aria-pressed", String(type === "character" ? activeCharacterSelections.has(key) : activeLocationSelections.has(key)));
     const swatch = document.createElement("i"); swatch.className = "legend-swatch" + (shape === "hex" ? " legend-hex" : ""); swatch.style.backgroundColor = color;
     const copy = document.createElement("span"); copy.className = "legend-copy";
     const name = document.createElement("span"); name.className = "legend-name"; name.textContent = label; copy.appendChild(name);
@@ -479,7 +479,7 @@ function initializeDynamicLegend() {
     }
   };
   const updateSelectionHighlights = () => {
-    document.querySelectorAll(".location-box").forEach(box => box.classList.toggle("is-selected-location", box.dataset.location === activeLocationSelection));
+    document.querySelectorAll(".location-box").forEach(box => { const selected = activeLocationSelections.has(box.dataset.location); box.classList.toggle("is-selected-location", selected); box.setAttribute("aria-pressed", String(selected)); });
     document.querySelectorAll(".location-box .hex:not(.rip)").forEach(badge => {
       const selected = activeCharacterSelections.has(badge.dataset.character);
       badge.classList.toggle("is-selected-character", selected);
@@ -487,11 +487,21 @@ function initializeDynamicLegend() {
       badge.setAttribute("aria-pressed", String(selected));
     });
     document.querySelectorAll(".legend-item[data-type]").forEach(item => {
-      const selected = item.dataset.type === "character" ? activeCharacterSelections.has(item.dataset.key) : activeLocationSelection === item.dataset.key;
+      const selected = item.dataset.type === "character" ? activeCharacterSelections.has(item.dataset.key) : activeLocationSelections.has(item.dataset.key);
       item.classList.toggle("is-selected", selected); item.setAttribute("aria-pressed", String(selected));
     });
-    const clearButton = document.getElementById("clear-selection");
-    if (clearButton) clearButton.hidden = activeCharacterSelections.size === 0 && !activeLocationSelection;
+    const selectionToolbar = document.getElementById("selection-toolbar");
+    const selectionSummary = document.getElementById("selection-summary");
+    const hasSelection = activeCharacterSelections.size > 0 || activeLocationSelections.size > 0;
+    if (selectionToolbar) selectionToolbar.hidden = !hasSelection;
+    if (selectionSummary) {
+      const places = activeLocationSelections.size;
+      const characters = activeCharacterSelections.size;
+      const parts = [];
+      if (places) parts.push(places + " " + (places === 1 ? "place" : "places"));
+      if (characters) parts.push(characters + " " + (characters === 1 ? "character" : "characters"));
+      selectionSummary.textContent = parts.join(" · ") + " selected";
+    }
   };
   legend.addEventListener("click", event => {
     const item = event.target.closest(".legend-item[data-type]");
@@ -499,15 +509,15 @@ function initializeDynamicLegend() {
     if (item.dataset.type === "character") {
       const code = item.dataset.key;
       if (activeCharacterSelections.has(code)) activeCharacterSelections.delete(code); else activeCharacterSelections.add(code);
-      activeLocationSelection = null;
     } else {
-      activeLocationSelection = activeLocationSelection === item.dataset.key ? null : item.dataset.key;
-      activeCharacterSelections.clear();
+      const location = item.dataset.key;
+      if (activeLocationSelections.has(location)) activeLocationSelections.delete(location);
+      else activeLocationSelections.add(location);
     }
     updateSelectionHighlights();
   });
   document.getElementById("clear-selection")?.addEventListener("click", () => {
-    activeCharacterSelections.clear(); activeLocationSelection = null; updateSelectionHighlights();
+    activeCharacterSelections.clear(); activeLocationSelections.clear(); updateSelectionHighlights();
   });
   document.getElementById("timeline-map").addEventListener("click", event => {
     const badge = event.target.closest(".location-box .hex:not(.rip)");
@@ -515,14 +525,14 @@ function initializeDynamicLegend() {
       const code = badge.dataset.character;
       if (activeCharacterSelections.has(code)) activeCharacterSelections.delete(code);
       else activeCharacterSelections.add(code);
-      activeLocationSelection = null;
       updateSelectionHighlights();
       return;
     }
     const box = event.target.closest(".location-box");
     if (!box) return;
-    activeLocationSelection = activeLocationSelection === box.dataset.location ? null : box.dataset.location;
-    activeCharacterSelections.clear(); updateSelectionHighlights();
+    if (activeLocationSelections.has(box.dataset.location)) activeLocationSelections.delete(box.dataset.location);
+    else activeLocationSelections.add(box.dataset.location);
+    updateSelectionHighlights();
   });
   document.getElementById("timeline-map").addEventListener("keydown", event => {
     if (event.key !== "Enter" && event.key !== " ") return;
