@@ -1,7 +1,7 @@
 # Erilea map asset
 
-The Story Atlas map viewer expects the image at `assets/maps/erilea-map.webp`.
+The Story Atlas viewer currently loads the temporary map image from `assets/maps/erilea-map.png`.
 
-The uploaded reference image is being used to develop and position the interactive overlay. It is not included in this public repository while reproduction permission is unresolved. Add an image at the expected path once the project has permission to publish it, or replace the configured `map.image` path in `js/stories.js` with an appropriately licensed asset.
+**Temporary development asset:** This image was supplied by the project owner for development and marker-positioning work. It is not represented as the final or rights-cleared map artwork. Replace it with an appropriately licensed image or obtain permission for public reproduction before deploying the map publicly.
 
-The map markers are approximate starting coordinates and should be reviewed against the final approved image before release.
+The map markers in `js/stories.js` are approximate starting coordinates and should be checked against the final map image before release.
