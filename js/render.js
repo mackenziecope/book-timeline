@@ -212,6 +212,7 @@ function renderTimeline(data) {
       box.className = "location-box";
       if (!isFirstAppearance && !charsChanged) box.classList.add("is-unchanged");
       box.dataset.location = field;
+      box.dataset.faction = locationFactionMap[normalizeLocationKey(field)] || "neutral";
       box.tabIndex = 0;
       box.setAttribute("role", "button");
       box.setAttribute("aria-label", "Select location " + field);
@@ -290,8 +291,8 @@ function initializeDynamicLegend() {
   const countEl = document.getElementById("legend-count");
   const locationCountEl = document.getElementById("legend-location-count");
   const characterCountEl = document.getElementById("legend-character-count");
-  const locationGroup = document.getElementById("legend-locations-group");
-  const characterGroup = document.getElementById("legend-characters-group");
+  const tabButtons = [...legend.querySelectorAll(".legend-tab[data-tab]")];
+  const tabPanels = [...legend.querySelectorAll(".legend-panel")];
   if (!legend || !locationsEl || !charactersEl || !countEl) return;
   const header = document.querySelector(".site-header");
   const updateHeaderOffset = () => {
@@ -316,6 +317,31 @@ function initializeDynamicLegend() {
     if (detail) { const meta = document.createElement("small"); meta.className = "legend-detail"; meta.textContent = detail; copy.appendChild(meta); }
     item.append(swatch, copy); parent.appendChild(item);
   };
+  const activateTab = (tabName, focus = false) => {
+    tabButtons.forEach(button => {
+      const active = button.dataset.tab === tabName;
+      button.classList.toggle("is-active", active);
+      button.setAttribute("aria-selected", String(active));
+      button.tabIndex = active ? 0 : -1;
+      if (active && focus) button.focus();
+    });
+    tabPanels.forEach(panel => { panel.hidden = panel.id !== "panel-" + tabName; });
+    try { localStorage.setItem("story-atlas-active-tab-" + storyKey, tabName); } catch {}
+  };
+  tabButtons.forEach((button, index) => {
+    button.addEventListener("click", () => activateTab(button.dataset.tab));
+    button.addEventListener("keydown", event => {
+      if (!["ArrowLeft", "ArrowRight", "Home", "End"].includes(event.key)) return;
+      event.preventDefault();
+      const next = event.key === "Home" ? 0 : event.key === "End" ? tabButtons.length - 1
+        : (index + (event.key === "ArrowRight" ? 1 : -1) + tabButtons.length) % tabButtons.length;
+      activateTab(tabButtons[next].dataset.tab, true);
+    });
+  });
+  let savedTab = "characters";
+  try { savedTab = localStorage.getItem("story-atlas-active-tab-" + storyKey) || savedTab; } catch {}
+  activateTab(tabButtons.some(button => button.dataset.tab === savedTab) ? savedTab : "characters");
+
   const locationSort = document.getElementById("location-sort");
   const characterSort = document.getElementById("character-sort");
   const showAllAvailable = document.getElementById("show-all-available");
@@ -335,7 +361,7 @@ function initializeDynamicLegend() {
     };
     localStorage.setItem(settingsKey, JSON.stringify(savedLayout));
   };
-  const factionLabel = key => FACTIONS[key]?.label || key || "Unaligned";
+  const factionLabel = key => !key || key === "neutral" ? "Unaligned" : (FACTIONS[key]?.label || key);
   const compareFaction = (a, b) => {
     const aKey = (locationFactionMap[normalizeLocationKey(a.dataset.location)] || "").toLowerCase();
     const bKey = (locationFactionMap[normalizeLocationKey(b.dataset.location)] || "").toLowerCase();
@@ -367,6 +393,21 @@ function initializeDynamicLegend() {
       return (characterOrderMap[codeA] ?? 999999) - (characterOrderMap[codeB] ?? 999999) || codeA.localeCompare(codeB);
     });
   };
+  const applyViewerSorts = () => {
+    document.querySelectorAll(".location-row").forEach(row => {
+      const boxes = [...row.querySelectorAll(":scope > .location-box")];
+      sortLocations(boxes).forEach(box => row.appendChild(box));
+      row.querySelectorAll(".badges").forEach(badges => {
+        const children = [...badges.children];
+        const sortedBadges = sortCharacters(
+          children.filter(child => child.matches(".hex:not(.rip)")).map(el => [el.dataset.character, el])
+        ).map(entry => entry[1]);
+        let nextBadge = 0;
+        const reordered = children.map(child => child.matches(".hex:not(.rip)") ? sortedBadges[nextBadge++] : child);
+        badges.replaceChildren(...reordered);
+      });
+    });
+  };
   const updateLegend = () => {
     const availableBoxes = [...document.querySelectorAll(".location-box:not([hidden])")];
     const availableBadges = [...document.querySelectorAll(".location-box:not([hidden]) .hex:not(.rip)")];
@@ -378,12 +419,10 @@ function initializeDynamicLegend() {
     countEl.textContent = locations.length + " places · " + characters.length + " people";
     if (locationCountEl) locationCountEl.textContent = locations.length;
     if (characterCountEl) characterCountEl.textContent = characters.length;
-    if (locationGroup) locationGroup.hidden = locations.length === 0;
-    if (characterGroup) characterGroup.hidden = characters.length === 0;
     locationsEl.replaceChildren();
     locationsEl.hidden = false;
     if (locations.length) {
-      locations.forEach(el => addLegendItem(locationsEl, el.dataset.location, "", el.dataset.locationColor, "square", "location", el.dataset.location));
+      locations.forEach(el => addLegendItem(locationsEl, el.dataset.location, factionLabel(el.dataset.faction), el.dataset.locationColor, "square", "location", el.dataset.location));
     }
     charactersEl.replaceChildren();
     charactersEl.hidden = false;
@@ -478,7 +517,7 @@ function initializeDynamicLegend() {
     hideUnchangedToggle.addEventListener("change", () => { saveLayout(); applyUnchangedFilter(); });
   }
   [locationSort, characterSort, showAllAvailable].forEach(control => {
-    control?.addEventListener("change", () => { saveLayout(); updateLegend(); });
+    control?.addEventListener("change", () => { saveLayout(); applyViewerSorts(); updateLegend(); });
   });
   let scheduled = false;
   const scheduleUpdate = () => {
@@ -492,5 +531,6 @@ function initializeDynamicLegend() {
     const observer = new IntersectionObserver(scheduleUpdate, { rootMargin: "88px 0px 0px 0px" });
     document.querySelectorAll(".location-box, .location-box .hex:not(.rip)").forEach(el => observer.observe(el));
   }
+  applyViewerSorts();
   updateLegend();
 }
