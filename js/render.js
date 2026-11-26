@@ -19,6 +19,7 @@ const characterColorOrder = [];
 const locationColorMap = {};
 const characterColorMap = {};
 let legendObserver = null;
+let activeSelection = null;
 const characterOrderMap = {};
 const CHARACTER_NAMES = {};
 const CHARACTER_FACTIONS = {};
@@ -284,9 +285,13 @@ function initializeDynamicLegend() {
     return rect.bottom > 88 && rect.top < window.innerHeight;
   };
 
-  const addLegendItem = (parent, label, detail, color, shape = "square") => {
-    const item = document.createElement("div");
+  const addLegendItem = (parent, label, detail, color, shape = "square", type = "", key = "") => {
+    const item = document.createElement("button");
+    item.type = "button";
     item.className = "legend-item";
+    item.dataset.type = type;
+    item.dataset.key = key;
+    item.setAttribute("aria-pressed", String(activeSelection?.type === type && activeSelection?.key === key));
     const swatch = document.createElement("i");
     swatch.className = "legend-swatch" + (shape === "hex" ? " legend-hex" : "");
     swatch.style.backgroundColor = color;
@@ -320,7 +325,7 @@ function initializeDynamicLegend() {
       const heading = document.createElement("h3");
       heading.textContent = "Locations";
       locationsEl.appendChild(heading);
-      locations.forEach(el => addLegendItem(locationsEl, el.dataset.location, "", el.dataset.locationColor));
+      locations.forEach(el => addLegendItem(locationsEl, el.dataset.location, "", el.dataset.locationColor, "square", "location", el.dataset.location));
     }
 
     charactersEl.replaceChildren();
@@ -336,11 +341,42 @@ function initializeDynamicLegend() {
           el.dataset.characterName || CHARACTER_NAMES[code] || code,
           code + " · " + factionLabel,
           el.style.backgroundColor,
-          "hex"
+          "hex",
+          "character",
+          code
         );
       });
     }
+    updateSelectionHighlights();
   };
+
+  const clearButton = document.getElementById("clear-selection");
+  const updateSelectionHighlights = () => {
+    document.querySelectorAll(".location-box").forEach(box => {
+      box.classList.toggle("is-selected-location", activeSelection?.type === "location" && box.dataset.location === activeSelection.key);
+    });
+    document.querySelectorAll(".location-box .hex:not(.rip)").forEach(badge => {
+      badge.classList.toggle("is-selected-character", activeSelection?.type === "character" && badge.dataset.character === activeSelection.key);
+    });
+    document.querySelectorAll(".legend-item[data-type]").forEach(item => {
+      const selected = activeSelection?.type === item.dataset.type && activeSelection?.key === item.dataset.key;
+      item.classList.toggle("is-selected", selected);
+      item.setAttribute("aria-pressed", String(selected));
+    });
+    if (clearButton) clearButton.hidden = !activeSelection;
+  };
+
+  legend.addEventListener("click", event => {
+    const item = event.target.closest(".legend-item[data-type]");
+    if (!item) return;
+    const sameSelection = activeSelection?.type === item.dataset.type && activeSelection?.key === item.dataset.key;
+    activeSelection = sameSelection ? null : { type: item.dataset.type, key: item.dataset.key };
+    updateSelectionHighlights();
+  });
+  clearButton?.addEventListener("click", () => {
+    activeSelection = null;
+    updateSelectionHighlights();
+  });
 
   let scheduled = false;
   const scheduleUpdate = () => {
