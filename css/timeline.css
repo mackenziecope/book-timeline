@@ -537,3 +537,12 @@ body {
   position: relative;
   z-index: 5;
 }
+
+
+/* Strong, cumulative character selection */
+.legend-item[data-type="character"] { min-height: 42px; padding: 7px 8px; }
+.legend-item[data-type="character"].is-selected { border: 2px solid #174f59; background: #d9edf0; box-shadow: inset 5px 0 #174f59, 0 2px 8px rgba(23,79,89,.18); color: #153f48; font-weight: 700; }
+.legend-item[data-type="character"].is-selected .legend-name { color: #153f48; font-weight: 800; }
+.hex.is-selected-character { outline: 4px solid #123f49; outline-offset: 2px; box-shadow: 0 0 0 5px #fff, 0 0 0 8px #123f49; filter: brightness(1.22) saturate(1.3); transform: scale(1.28); position: relative; z-index: 8; }
+.hex.is-dimmed-character { opacity: .2; filter: grayscale(.8); transform: scale(.9); }
+.location-box .hex { transition: opacity 140ms ease, filter 140ms ease, transform 140ms ease; }
