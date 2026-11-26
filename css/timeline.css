@@ -228,6 +228,7 @@ body {
    LOCATION COLORS
    ========================= */
 .location-box {
+  background-color: color-mix(in srgb, var(--location-color, #999) 13%, white);
   transition: background-color 160ms ease, border-color 160ms ease;
 }
 
