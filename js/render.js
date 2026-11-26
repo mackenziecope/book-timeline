@@ -34,12 +34,31 @@ function getLocationColor(location) {
   }
   return locationColorMap[location];
 }
-function getCharacterColor(character) {
-  if (!characterColorMap[character]) {
-    characterColorOrder.push(character);
-    characterColorMap[character] = generatedColor(characterColorOrder.length - 1, 48, 34);
+function hexToHue(hex) {
+  const normalized = String(hex || "").replace(/^#/, "");
+  if (!/^(?:[0-9a-f]{3}|[0-9a-f]{6})$/i.test(normalized)) return null;
+  const full = normalized.length === 3 ? normalized.split("").map(value => value + value).join("") : normalized;
+  const [r, g, b] = [0, 2, 4].map(index => parseInt(full.slice(index, index + 2), 16) / 255);
+  const max = Math.max(r, g, b);
+  const min = Math.min(r, g, b);
+  const delta = max - min;
+  if (!delta) return 0;
+  let hue = max === r ? ((g - b) / delta) % 6 : max === g ? (b - r) / delta + 2 : (r - g) / delta + 4;
+  return (hue * 60 + 360) % 360;
+}
+function getCharacterColor(character, factionKey = CHARACTER_FACTIONS[character] || "neutral") {
+  const key = factionKey + ":" + character;
+  if (!characterColorMap[key]) {
+    const members = Object.keys(CHARACTER_NAMES)
+      .filter(code => (CHARACTER_FACTIONS[code] || "neutral") === factionKey)
+      .sort((a, b) => (characterOrderMap[a] ?? 999) - (characterOrderMap[b] ?? 999) || a.localeCompare(b));
+    const index = Math.max(0, members.indexOf(character));
+    const factionHue = hexToHue(FACTIONS[factionKey]?.color);
+    characterColorMap[key] = factionHue === null
+      ? generatedColor(index, 58, 30 + (index % 4) * 4)
+      : `hsl(${factionHue.toFixed(1)} ${58 + (index % 3) * 7}% ${27 + (index % 5) * 4}%)`;
   }
-  return characterColorMap[character];
+  return characterColorMap[key];
 }
 function fetchOptionalCsv(url) {
   if (!url) return Promise.resolve("");
@@ -170,7 +189,7 @@ function renderTimeline(data) {
           badge.className = "hex";
           badge.textContent = code;
           const factionKey = getFaction(code, stepIndex);
-          badge.style.backgroundColor = FACTIONS[factionKey]?.color || getCharacterColor(code);
+          badge.style.backgroundColor = getCharacterColor(code, factionKey);
           badge.dataset.character = code;
           badge.dataset.characterName = CHARACTER_NAMES[code] || code;
           badge.dataset.faction = factionKey;
@@ -216,7 +235,19 @@ function initializeDynamicLegend() {
   const charactersEl = document.getElementById("legend-characters");
   const countEl = document.getElementById("legend-count");
   if (!legend || !locationsEl || !charactersEl || !countEl) return;
-  const isVisible = element => { const rect = element.getBoundingClientRect(); return rect.bottom > 88 && rect.top < window.innerHeight; };
+  const header = document.querySelector(".site-header");
+  const updateHeaderOffset = () => {
+    const height = header?.getBoundingClientRect().height || 0;
+    document.documentElement.style.setProperty("--site-header-height", height + "px");
+  };
+  updateHeaderOffset();
+  if (header && "ResizeObserver" in window) new ResizeObserver(updateHeaderOffset).observe(header);
+  window.addEventListener("resize", updateHeaderOffset, { passive: true });
+  const isVisible = element => {
+    const rect = element.getBoundingClientRect();
+    const headerBottom = header?.getBoundingClientRect().bottom || 0;
+    return rect.bottom > headerBottom + 12 && rect.top < window.innerHeight;
+  };
   const addLegendItem = (parent, label, detail, color, shape = "square", type = "", key = "") => {
     const item = document.createElement("button");
     item.type = "button"; item.className = "legend-item"; item.dataset.type = type; item.dataset.key = key;
@@ -243,9 +274,7 @@ function initializeDynamicLegend() {
     if (characters.length) {
       const heading = document.createElement("h3"); heading.textContent = "Characters"; charactersEl.appendChild(heading);
       characters.forEach(([code, el]) => {
-        const factionKey = el.dataset.faction || "neutral";
-        const factionLabel = FACTIONS[factionKey]?.label || (factionKey === "neutral" ? "No faction assigned" : factionKey);
-        addLegendItem(charactersEl, el.dataset.characterName || CHARACTER_NAMES[code] || code, code + " · " + factionLabel, el.style.backgroundColor, "hex", "character", code);
+        addLegendItem(charactersEl, el.dataset.characterName || CHARACTER_NAMES[code] || code, code, el.style.backgroundColor, "hex", "character", code);
       });
     }
     updateSelectionHighlights();
