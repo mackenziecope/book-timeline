@@ -969,3 +969,217 @@ body {
   border-color: #52616a;
 }
 .legend-section[hidden] { display: none !important; }
+
+
+/* =========================
+   ISSUE #61: TWO-PANE WORKSPACE
+   ========================= */
+
+/* The document is a shell. Only the timeline and field guide scroll on desktop. */
+html, body { min-height: 0; }
+body {
+  height: 100vh;
+  height: 100dvh;
+  min-height: 0;
+  overflow: hidden;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: auto minmax(0, 1fr) auto;
+}
+.site-header {
+  position: relative;
+  top: auto;
+  grid-column: 1;
+  grid-row: 1;
+  z-index: 30;
+}
+.dashboard-layout {
+  grid-column: 1;
+  grid-row: 2;
+  display: grid;
+  grid-template-columns: minmax(0, 3fr) minmax(260px, 1fr);
+  align-items: stretch;
+  min-width: 0;
+  min-height: 0;
+  height: 100%;
+  overflow: hidden;
+}
+#timeline-map {
+  grid-column: 1;
+  grid-row: 1;
+  width: 100%;
+  min-width: 0;
+  min-height: 0;
+  height: 100%;
+  box-sizing: border-box;
+  overflow: auto;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
+  padding: 26px clamp(18px, 3vw, 44px) 44px;
+}
+.timeline-step { width: 100%; max-width: 1120px; margin-inline: auto; }
+.timeline-legend {
+  grid-column: 2;
+  grid-row: 1;
+  position: relative;
+  inset: auto;
+  align-self: stretch;
+  display: flex;
+  flex-direction: column;
+  width: auto;
+  height: 100%;
+  min-width: 0;
+  min-height: 0;
+  max-height: none;
+  overflow: hidden;
+  margin: 0;
+  padding: 0;
+  border-width: 0 0 0 1px;
+  border-radius: 0;
+  box-shadow: -4px 0 18px rgba(36,57,75,.05);
+  background: rgba(255,255,255,.96);
+}
+.timeline-legend[hidden] { display: none; }
+.legend-heading {
+  position: sticky;
+  top: 0;
+  z-index: 4;
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 0;
+  padding: 18px 16px 14px;
+  border-bottom: 1px solid var(--atlas-line);
+  background: rgba(255,255,255,.97);
+}
+.legend-heading strong { display: block; }
+.legend-controls { flex-wrap: nowrap; justify-content: flex-end; }
+#legend-count { white-space: nowrap; }
+.legend-content {
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
+  padding: 8px 14px 22px;
+}
+.legend-group {
+  min-width: 0;
+  border-bottom: 1px solid var(--atlas-line);
+}
+.legend-group > summary {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 12px 2px;
+  color: var(--atlas-ink);
+  background: rgba(255,255,255,.98);
+  cursor: pointer;
+  font-size: .78rem;
+  font-weight: 700;
+  letter-spacing: .07em;
+  list-style: none;
+  text-transform: uppercase;
+}
+.legend-group > summary::-webkit-details-marker { display: none; }
+.legend-group > summary::after { content: "+"; color: var(--atlas-muted); font-size: 1rem; }
+.legend-group[open] > summary::after { content: "−"; }
+.legend-group-count {
+  margin-left: auto;
+  color: var(--atlas-muted);
+  font-size: .7rem;
+  font-weight: 500;
+  letter-spacing: 0;
+}
+.legend-section { padding: 0 0 10px; }
+.legend-section h3 { display: none; }
+.legend-item { width: 100%; }
+.legend-settings-group .legend-settings-options {
+  position: static;
+  display: grid;
+  width: auto;
+  max-width: none;
+  margin: 0 0 12px;
+  padding: 4px 2px 10px;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+.legend-setting { align-items: flex-start; }
+.legend-setting-select { flex-direction: column; align-items: stretch; gap: 5px; }
+.legend-setting select { max-width: 100%; }
+.site-footer { grid-column: 1; grid-row: 3; }
+
+.dark-mode .timeline-legend { background: rgba(31,44,53,.98); }
+.dark-mode .legend-heading {
+  background: rgba(31,44,53,.98);
+  border-color: var(--atlas-line);
+}
+.dark-mode .legend-group > summary {
+  color: var(--atlas-ink);
+  background: rgba(31,44,53,.98);
+}
+.dark-mode .legend-settings-group .legend-settings-options { background: transparent; }
+
+/* Narrow screens return to a natural document flow, with a compact sticky guide. */
+@media (max-width: 760px) {
+  html, body { min-height: 100%; }
+  body {
+    height: auto;
+    min-height: 100vh;
+    min-height: 100dvh;
+    overflow: visible;
+    grid-template-rows: auto auto auto;
+  }
+  .site-header { position: sticky; top: 0; }
+  .dashboard-layout {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    height: auto;
+    min-height: 0;
+    overflow: visible;
+  }
+  .timeline-legend {
+    order: 0;
+    position: sticky;
+    top: var(--site-header-height);
+    z-index: 20;
+    width: 100%;
+    height: auto;
+    max-height: min(42vh, 360px);
+    margin: 0;
+    overflow: hidden;
+    border-width: 0 0 1px;
+    border-radius: 0;
+    box-shadow: 0 3px 10px rgba(36,57,75,.07);
+  }
+  .legend-heading { padding: 10px 14px; }
+  .legend-content { padding: 4px 14px 12px; }
+  .legend-group > summary { padding: 9px 2px; }
+  #timeline-map {
+    order: 1;
+    height: auto;
+    min-height: 0;
+    overflow: visible;
+    padding: 22px 14px 36px;
+  }
+  .site-footer { grid-row: 3; }
+}
+
+@media (max-width: 520px) {
+  .header-inner { padding: 12px 14px; }
+  .timeline-legend { max-height: min(46vh, 380px); }
+  .legend-heading { align-items: center; }
+  #timeline-map { padding: 18px 12px 30px; }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .legend-group > summary::after { transition: transform 140ms ease; }
+}
