@@ -5,7 +5,6 @@ const storyKey = params.get("story") || DEFAULT_STORY_KEY;
 const activeStory = STORIES[storyKey] || STORIES[DEFAULT_STORY_KEY];
 
 let FACTIONS = {};
-let LOCATION_DEFAULT_FACTIONS = {};
 const DEFAULT_FACTION = activeStory.defaultFactions || {};
 const FACTION_OVERRIDES = activeStory.factionOverrides || {};
 const BOOK_LABELS = activeStory.bookLabels || {};
@@ -90,7 +89,6 @@ document.addEventListener("DOMContentLoaded", () => {
     locationsParsed.data.forEach(row => {
       if (!row.Location) return;
       const name = row.Location.trim();
-      if (row.default_faction) LOCATION_DEFAULT_FACTIONS[name] = row.default_faction.trim().toLowerCase();
       const suppliedColor = (row.hex || row.color || "").trim();
       if (/^#?(?:[0-9a-f]{3}|[0-9a-f]{6})$/i.test(suppliedColor)) {
         locationColorMap[name] = suppliedColor.startsWith("#") ? suppliedColor : "#" + suppliedColor;
@@ -134,10 +132,11 @@ function renderTimeline(data) {
         if (!e.trim()) finalEntries.push("");
         else finalEntries.push(sortedChars[charIndex++]);
       });
-      currentStepLocations[field] = { chars: [...chars].sort() };
+      const normalizedChars = [...chars].sort();
+      currentStepLocations[field] = { chars: normalizedChars };
       if (!chars.length) return;
       const prev = prevStepLocations[field] || { chars: [] };
-      const charsChanged = prev.chars.join(",") !== chars.join(",");
+      const charsChanged = prev.chars.join(",") !== normalizedChars.join(",");
       const isFirstAppearance = !prevStepLocations[field];
 
       const box = document.createElement("div");
@@ -291,6 +290,15 @@ function initializeDynamicLegend() {
     event.preventDefault(); event.target.click();
   });
 
+
+  const darkModeToggle = document.getElementById("dark-mode-toggle");
+  const savedTheme = localStorage.getItem("story-atlas-theme");
+  document.body.classList.toggle("dark-mode", savedTheme === "dark");
+  if (darkModeToggle) darkModeToggle.checked = savedTheme === "dark";
+  darkModeToggle?.addEventListener("change", () => {
+    document.body.classList.toggle("dark-mode", darkModeToggle.checked);
+    localStorage.setItem("story-atlas-theme", darkModeToggle.checked ? "dark" : "light");
+  });
   const hideUnchangedToggle = document.getElementById("hide-unchanged-locations");
   hideUnchangedToggle?.addEventListener("change", () => {
     document.querySelectorAll(".location-row").forEach(row => {
