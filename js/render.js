@@ -330,6 +330,7 @@ function initializeDynamicLegend() {
     item.append(swatch, copy); parent.appendChild(item);
   };
   const activateTab = (tabName, focus = false) => {
+    legend.classList.toggle("settings-open", tabName === "settings");
     tabButtons.forEach(button => {
       const active = button.dataset.tab === tabName;
       button.classList.toggle("is-active", active);
