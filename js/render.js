@@ -20,6 +20,8 @@ let activeLocationSelection = null;
 const characterOrderMap = {};
 const locationOrderMap = {};
 const locationRowOrderMap = {};
+const locationCharacterCountMap = {};
+const factionOrderMap = {};
 const normalizeLocationKey = location => String(location || "").trim().toLowerCase();
 const getCsvField = (row, field) => Object.entries(row).find(([key]) => key.trim().toLowerCase() === field.toLowerCase())?.[1];
 const CHARACTER_NAMES = {};
@@ -115,10 +117,11 @@ document.addEventListener("DOMContentLoaded", () => {
     const characterParsed = Papa.parse(characterText, { header: true, skipEmptyLines: true });
     const factionsParsed = Papa.parse(factionsText, { header: true, skipEmptyLines: true });
     const locationsParsed = Papa.parse(locationsText, { header: true, skipEmptyLines: true });
-    factionsParsed.data.forEach(row => {
+    factionsParsed.data.forEach((row, index) => {
       if (row.default_faction && row.hex) {
         const key = row.default_faction.trim().toLowerCase();
         FACTIONS[key] = { color: "#" + row.hex.trim().replace(/^#/, ""), label: (row.name || row.default_faction).trim() };
+        factionOrderMap[key] = index;
       }
     });
     locationsParsed.data.forEach((row, rowIndex) => {
@@ -190,6 +193,7 @@ function renderTimeline(data) {
     locationEntries.forEach(({ field, value }) => {
       const rawEntries = value ? value.replace(/"/g, "").split(",") : [];
       const chars = rawEntries.map(v => v.trim()).filter(Boolean);
+      locationCharacterCountMap[field] = (locationCharacterCountMap[field] || 0) + chars.length;
       const sortedChars = [...chars].sort((a, b) => (characterOrderMap[a] ?? 999) - (characterOrderMap[b] ?? 999));
       const finalEntries = [];
       let charIndex = 0;
@@ -308,20 +312,76 @@ function initializeDynamicLegend() {
     if (detail) { const meta = document.createElement("small"); meta.className = "legend-detail"; meta.textContent = detail; copy.appendChild(meta); }
     item.append(swatch, copy); parent.appendChild(item);
   };
+  const locationSort = document.getElementById("location-sort");
+  const characterSort = document.getElementById("character-sort");
+  const showLocationList = document.getElementById("show-location-list");
+  const showCharacterList = document.getElementById("show-character-list");
+  const settingsKey = "story-atlas-layout-" + storyKey;
+  let savedLayout = {};
+  try { savedLayout = JSON.parse(localStorage.getItem(settingsKey) || "{}"); } catch {}
+  if (locationSort) locationSort.value = savedLayout.locationSort || "plot";
+  if (characterSort) characterSort.value = savedLayout.characterSort || "plot";
+  if (showLocationList) showLocationList.checked = savedLayout.showLocationList === true;
+  if (showCharacterList) showCharacterList.checked = savedLayout.showCharacterList === true;
+  const saveLayout = () => {
+    savedLayout = {
+      ...savedLayout,
+      locationSort: locationSort?.value || "plot",
+      characterSort: characterSort?.value || "plot",
+      showLocationList: !!showLocationList?.checked,
+      showCharacterList: !!showCharacterList?.checked,
+      showUnchanged: !!hideUnchangedToggle?.checked
+    };
+    localStorage.setItem(settingsKey, JSON.stringify(savedLayout));
+  };
+  const factionLabel = key => FACTIONS[key]?.label || key || "Unaligned";
+  const compareFaction = (a, b) => {
+    const aKey = (locationFactionMap[normalizeLocationKey(a.dataset.location)] || "").toLowerCase();
+    const bKey = (locationFactionMap[normalizeLocationKey(b.dataset.location)] || "").toLowerCase();
+    return (factionOrderMap[aKey] ?? 999999) - (factionOrderMap[bKey] ?? 999999)
+      || factionLabel(aKey).localeCompare(factionLabel(bKey))
+      || a.dataset.location.localeCompare(b.dataset.location);
+  };
+  const sortLocations = locations => {
+    const mode = locationSort?.value || "plot";
+    return locations.sort((a, b) => {
+      if (mode === "alphabetical") return a.dataset.location.localeCompare(b.dataset.location);
+      if (mode === "faction") return compareFaction(a, b);
+      if (mode === "count") return (locationCharacterCountMap[b.dataset.location] || 0) - (locationCharacterCountMap[a.dataset.location] || 0)
+        || (locationOrderMap[normalizeLocationKey(a.dataset.location)] ?? 999999) - (locationOrderMap[normalizeLocationKey(b.dataset.location)] ?? 999999)
+        || a.dataset.location.localeCompare(b.dataset.location);
+      return (locationOrderMap[normalizeLocationKey(a.dataset.location)] ?? locationRowOrderMap[normalizeLocationKey(a.dataset.location)] ?? 999999)
+        - (locationOrderMap[normalizeLocationKey(b.dataset.location)] ?? locationRowOrderMap[normalizeLocationKey(b.dataset.location)] ?? 999999)
+        || a.dataset.location.localeCompare(b.dataset.location);
+    });
+  };
+  const sortCharacters = characters => {
+    const mode = characterSort?.value || "plot";
+    return characters.sort(([codeA, elA], [codeB, elB]) => {
+      if (mode === "alphabetical") return (elA.dataset.characterName || codeA).localeCompare(elB.dataset.characterName || codeB);
+      if (mode === "faction") return (factionOrderMap[elA.dataset.faction] ?? 999999) - (factionOrderMap[elB.dataset.faction] ?? 999999)
+        || factionLabel(elA.dataset.faction).localeCompare(factionLabel(elB.dataset.faction))
+        || (characterOrderMap[codeA] ?? 999999) - (characterOrderMap[codeB] ?? 999999)
+        || codeA.localeCompare(codeB);
+      return (characterOrderMap[codeA] ?? 999999) - (characterOrderMap[codeB] ?? 999999) || codeA.localeCompare(codeB);
+    });
+  };
   const updateLegend = () => {
     const visibleBoxes = [...document.querySelectorAll(".location-box:not([hidden])")].filter(isVisible);
     const visibleBadges = [...document.querySelectorAll(".location-box:not([hidden]) .hex:not(.rip)")].filter(isVisible);
-    const locations = [...new Map(visibleBoxes.map(el => [el.dataset.location, el])).values()];
-    const characters = [...new Map(visibleBadges.map(el => [el.dataset.character, el])).entries()];
+    const locations = sortLocations([...new Map(visibleBoxes.map(el => [el.dataset.location, el])).values()]);
+    const characters = sortCharacters([...new Map(visibleBadges.map(el => [el.dataset.character, el])).entries()]);
     legend.hidden = locations.length === 0 && characters.length === 0;
     countEl.textContent = locations.length + " places · " + characters.length + " people";
     locationsEl.replaceChildren();
-    if (locations.length) {
+    locationsEl.hidden = !showLocationList?.checked;
+    if (locations.length && !locationsEl.hidden) {
       const heading = document.createElement("h3"); heading.textContent = "Locations"; locationsEl.appendChild(heading);
       locations.forEach(el => addLegendItem(locationsEl, el.dataset.location, "", el.dataset.locationColor, "square", "location", el.dataset.location));
     }
     charactersEl.replaceChildren();
-    if (characters.length) {
+    charactersEl.hidden = !showCharacterList?.checked;
+    if (characters.length && !charactersEl.hidden) {
       const heading = document.createElement("h3"); heading.textContent = "Characters"; charactersEl.appendChild(heading);
       characters.forEach(([code, el]) => {
         addLegendItem(charactersEl, el.dataset.characterName || CHARACTER_NAMES[code] || code, code, el.style.backgroundColor, "hex", "character", code);
@@ -398,14 +458,22 @@ function initializeDynamicLegend() {
     document.body.classList.toggle("dark-mode", darkModeToggle.checked);
     localStorage.setItem("story-atlas-theme", darkModeToggle.checked ? "dark" : "light");
   });
-  const hideUnchangedToggle = document.getElementById("hide-unchanged-locations");
-  hideUnchangedToggle?.addEventListener("change", () => {
+  const hideUnchangedToggle = document.getElementById("show-unchanged-locations");
+  const applyUnchangedFilter = () => {
     document.querySelectorAll(".location-row").forEach(row => {
       const boxes = [...row.querySelectorAll(".location-box")];
-      boxes.forEach(box => { box.hidden = hideUnchangedToggle.checked && box.classList.contains("is-unchanged"); });
+      boxes.forEach(box => { box.hidden = !hideUnchangedToggle?.checked && box.classList.contains("is-unchanged"); });
       row.hidden = boxes.length > 0 && boxes.every(box => box.hidden);
     });
     updateLegend();
+  };
+  if (hideUnchangedToggle) {
+    hideUnchangedToggle.checked = savedLayout.showUnchanged === true;
+    applyUnchangedFilter();
+    hideUnchangedToggle.addEventListener("change", () => { saveLayout(); applyUnchangedFilter(); });
+  }
+  [locationSort, characterSort, showLocationList, showCharacterList].forEach(control => {
+    control?.addEventListener("change", () => { saveLayout(); updateLegend(); });
   });
   let scheduled = false;
   const scheduleUpdate = () => {
