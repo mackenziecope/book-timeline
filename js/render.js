@@ -19,7 +19,8 @@ const characterColorOrder = [];
 const locationColorMap = {};
 const characterColorMap = {};
 let legendObserver = null;
-let activeSelection = null;
+const activeCharacterSelections = new Set();
+let activeLocationSelection = null;
 const characterOrderMap = {};
 const CHARACTER_NAMES = {};
 const CHARACTER_FACTIONS = {};
@@ -291,7 +292,7 @@ function initializeDynamicLegend() {
     item.className = "legend-item";
     item.dataset.type = type;
     item.dataset.key = key;
-    item.setAttribute("aria-pressed", String(activeSelection?.type === type && activeSelection?.key === key));
+    item.setAttribute("aria-pressed", String(type === "character" ? activeCharacterSelections.has(key) : activeLocationSelection === key));
     const swatch = document.createElement("i");
     swatch.className = "legend-swatch" + (shape === "hex" ? " legend-hex" : "");
     swatch.style.backgroundColor = color;
@@ -353,28 +354,37 @@ function initializeDynamicLegend() {
   const clearButton = document.getElementById("clear-selection");
   const updateSelectionHighlights = () => {
     document.querySelectorAll(".location-box").forEach(box => {
-      box.classList.toggle("is-selected-location", activeSelection?.type === "location" && box.dataset.location === activeSelection.key);
+      box.classList.toggle("is-selected-location", box.dataset.location === activeLocationSelection);
     });
     document.querySelectorAll(".location-box .hex:not(.rip)").forEach(badge => {
-      badge.classList.toggle("is-selected-character", activeSelection?.type === "character" && badge.dataset.character === activeSelection.key);
+      badge.classList.toggle("is-selected-character", activeCharacterSelections.has(badge.dataset.character));
+      badge.classList.toggle("is-dimmed-character", activeCharacterSelections.size > 0 && !activeCharacterSelections.has(badge.dataset.character));
     });
     document.querySelectorAll(".legend-item[data-type]").forEach(item => {
-      const selected = activeSelection?.type === item.dataset.type && activeSelection?.key === item.dataset.key;
+      const selected = item.dataset.type === "character" ? activeCharacterSelections.has(item.dataset.key) : activeLocationSelection === item.dataset.key;
       item.classList.toggle("is-selected", selected);
       item.setAttribute("aria-pressed", String(selected));
     });
-    if (clearButton) clearButton.hidden = !activeSelection;
+    if (clearButton) clearButton.hidden = activeCharacterSelections.size === 0 && !activeLocationSelection;
   };
 
   legend.addEventListener("click", event => {
     const item = event.target.closest(".legend-item[data-type]");
     if (!item) return;
-    const sameSelection = activeSelection?.type === item.dataset.type && activeSelection?.key === item.dataset.key;
-    activeSelection = sameSelection ? null : { type: item.dataset.type, key: item.dataset.key };
+    if (item.dataset.type === "character") {
+      const code = item.dataset.key;
+      if (activeCharacterSelections.has(code)) activeCharacterSelections.delete(code);
+      else activeCharacterSelections.add(code);
+      activeLocationSelection = null;
+    } else {
+      activeLocationSelection = activeLocationSelection === item.dataset.key ? null : item.dataset.key;
+      activeCharacterSelections.clear();
+    }
     updateSelectionHighlights();
   });
   clearButton?.addEventListener("click", () => {
-    activeSelection = null;
+    activeCharacterSelections.clear();
+    activeLocationSelection = null;
     updateSelectionHighlights();
   });
 
