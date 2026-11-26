@@ -696,3 +696,42 @@ body.dark-mode {
 .dark-mode #story-nav a { color: #e0e6e8; background: #25343d; border-color: #52616a; }
 .dark-mode #story-nav a:hover,
 .dark-mode #story-nav a.active { color: #fff; background: #52616a; border-color: #52616a; }
+
+
+/* Compact, single-line legend entries */
+.legend-item[data-type="character"] {
+  min-height: 0;
+  padding: 4px 6px;
+  margin: 2px 0;
+}
+.legend-copy {
+  flex-direction: row;
+  align-items: baseline;
+  gap: 5px;
+  overflow: hidden;
+}
+.legend-name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.legend-detail {
+  flex: 0 0 auto;
+  white-space: nowrap;
+  font-size: .64rem;
+}
+
+/* Keep the field guide below the sticky header at every breakpoint */
+:root { --site-header-height: 0px; }
+.timeline-legend {
+  top: calc(var(--site-header-height) + 18px);
+  z-index: 10;
+  scroll-margin-top: calc(var(--site-header-height) + 12px);
+}
+@media (max-width: 820px) {
+  .timeline-legend {
+    top: var(--site-header-height);
+    max-height: min(28vh, calc(100vh - var(--site-header-height) - 12px));
+  }
+}
