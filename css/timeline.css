@@ -870,3 +870,66 @@ body {
   .dashboard-layout { grid-row: 2; }
   .site-footer { grid-row: 3; }
 }
+
+
+/* =========================
+   ACCESSIBILITY AND DARK-MODE CONTRAST
+   ========================= */
+
+/* Keep supporting text readable against the warm page background. */
+.legend-detail,
+#legend-count,
+.step-notes,
+.legend-kicker,
+.story-switcher-label {
+  color: #53616b;
+}
+
+.legend-section h3 {
+  color: #66543d;
+}
+
+/* Make every keyboard-operable timeline item visibly focusable. */
+.location-box:focus-visible,
+.location-box .hex:focus-visible {
+  outline: 3px solid #174f59;
+  outline-offset: 3px;
+}
+
+.dark-mode .step-label,
+.dark-mode .rip-line {
+  color: #e0e6e8;
+}
+
+.dark-mode .legend-detail,
+.dark-mode #legend-count,
+.dark-mode .step-notes,
+.dark-mode .legend-kicker,
+.dark-mode .story-switcher-label {
+  color: #b8c4c9;
+}
+
+.dark-mode .legend-section h3 {
+  color: #e0c99f;
+}
+
+.dark-mode .legend-settings summary,
+.dark-mode .legend-settings-options,
+.dark-mode .legend-setting {
+  color: #e0e6e8;
+}
+
+.dark-mode .legend-settings summary:hover,
+.dark-mode .legend-settings[open] summary {
+  background: #354954;
+}
+
+.dark-mode .location-box:focus-visible,
+.dark-mode .location-box .hex:focus-visible,
+.dark-mode .legend-item:focus-visible,
+.dark-mode .legend-settings summary:focus-visible,
+.dark-mode #clear-selection:focus-visible,
+.dark-mode #story-nav a:focus-visible {
+  outline: 3px solid #f0d6a6;
+  outline-offset: 3px;
+}
