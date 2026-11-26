@@ -41,8 +41,33 @@
             <summary>Settings</summary>
             <div class="legend-settings-options">
               <label class="legend-setting">
-                <input id="hide-unchanged-locations" type="checkbox">
-                <span>Hide unchanged places</span>
+                <input id="hide-unchanged-locations" type="checkbox" checked>
+                <span>Show unchanged places</span>
+              </label>
+              <label class="legend-setting legend-setting-select">
+                <span>Sort places</span>
+                <select id="location-sort">
+                  <option value="plot">Plot priority</option>
+                  <option value="faction">Faction</option>
+                  <option value="count">Character count</option>
+                  <option value="alphabetical">Alphabetical</option>
+                </select>
+              </label>
+              <label class="legend-setting legend-setting-select">
+                <span>Sort characters</span>
+                <select id="character-sort">
+                  <option value="plot">Plot priority</option>
+                  <option value="faction">Faction</option>
+                  <option value="alphabetical">Alphabetical</option>
+                </select>
+              </label>
+              <label class="legend-setting">
+                <input id="show-location-list" type="checkbox">
+                <span>Show places list</span>
+              </label>
+              <label class="legend-setting">
+                <input id="show-character-list" type="checkbox">
+                <span>Show characters list</span>
               </label>
               <label class="legend-setting">
                 <input id="dark-mode-toggle" type="checkbox">
