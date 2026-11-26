@@ -23,6 +23,26 @@
       <nav id="story-nav" aria-label="Choose a timeline"></nav>
     </div>
   </header>
+  <section id="story-map-panel" class="story-map-panel" aria-label="Interactive story map" hidden>
+    <div class="story-map-heading">
+      <div>
+        <p class="map-kicker">Explore the world</p>
+        <h2 id="story-map-title">Story map</h2>
+        <p id="story-map-help">Select a place to highlight it throughout the timeline. Zoom to explore character badges.</p>
+      </div>
+      <div class="map-controls" aria-label="Map controls">
+        <button id="map-zoom-out" type="button" aria-label="Zoom out">−</button>
+        <button id="map-zoom-in" type="button" aria-label="Zoom in">+</button>
+        <button id="map-reset" type="button">Reset</button>
+      </div>
+    </div>
+    <div id="story-map-viewport" class="story-map-viewport" tabindex="0" aria-label="Map. Use plus and minus to zoom, or drag to pan.">
+      <div id="story-map-canvas" class="story-map-canvas">
+        <img id="story-map-image" alt="Map of Erilea" draggable="false">
+        <div id="story-map-markers" class="story-map-markers"></div>
+      </div>
+    </div>
+  </section>
   <aside id="timeline-legend" class="timeline-legend" aria-live="polite" aria-label="Timeline key" hidden>
     <div class="legend-heading">
       <div>
