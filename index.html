@@ -28,7 +28,7 @@
   </header>
   <div class="dashboard-layout">
     <main id="timeline-map" aria-label="Story timeline"></main>
-    <aside id="timeline-legend" class="timeline-legend" aria-live="polite" aria-label="Timeline key" hidden>
+    <aside id="timeline-legend" class="timeline-legend" aria-live="polite" aria-label="Field guide" hidden>
       <div class="legend-heading">
         <div>
           <p class="legend-kicker">Field guide</p>
@@ -37,44 +37,52 @@
         <div class="legend-controls">
           <span id="legend-count"></span>
           <button id="clear-selection" type="button" hidden>Clear</button>
-          <details class="legend-settings">
-            <summary>Settings</summary>
-            <div class="legend-settings-options">
-              <label class="legend-setting">
-                <input id="show-unchanged-locations" type="checkbox">
-                <span>Show unchanged places</span>
-              </label>
-              <label class="legend-setting legend-setting-select">
-                <span>Sort places</span>
-                <select id="location-sort">
-                  <option value="plot">Plot priority</option>
-                  <option value="faction">Faction</option>
-                  <option value="count">Character count</option>
-                  <option value="alphabetical">Alphabetical</option>
-                </select>
-              </label>
-              <label class="legend-setting legend-setting-select">
-                <span>Sort characters</span>
-                <select id="character-sort">
-                  <option value="plot">Plot priority</option>
-                  <option value="faction">Faction</option>
-                  <option value="alphabetical">Alphabetical</option>
-                </select>
-              </label>
-              <label class="legend-setting">
-                <input id="show-all-available" type="checkbox">
-                <span>Show all available places and characters</span>
-              </label>
-              <label class="legend-setting">
-                <input id="dark-mode-toggle" type="checkbox">
-                <span>Dark mode</span>
-              </label>
-            </div>
-          </details>
         </div>
       </div>
-      <div id="legend-locations" class="legend-section"></div>
-      <div id="legend-characters" class="legend-section"></div>
+      <div class="legend-content">
+        <details id="legend-locations-group" class="legend-group" open>
+          <summary><span>Locations</span><span id="legend-location-count" class="legend-group-count"></span></summary>
+          <div id="legend-locations" class="legend-section"></div>
+        </details>
+        <details id="legend-characters-group" class="legend-group" open>
+          <summary><span>Characters</span><span id="legend-character-count" class="legend-group-count"></span></summary>
+          <div id="legend-characters" class="legend-section"></div>
+        </details>
+        <details class="legend-group legend-settings-group">
+          <summary><span>Settings</span></summary>
+          <div class="legend-settings-options">
+            <label class="legend-setting">
+              <input id="show-unchanged-locations" type="checkbox">
+              <span>Show unchanged places</span>
+            </label>
+            <label class="legend-setting legend-setting-select">
+              <span>Sort places</span>
+              <select id="location-sort">
+                <option value="plot">Plot priority</option>
+                <option value="faction">Faction</option>
+                <option value="count">Character count</option>
+                <option value="alphabetical">Alphabetical</option>
+              </select>
+            </label>
+            <label class="legend-setting legend-setting-select">
+              <span>Sort characters</span>
+              <select id="character-sort">
+                <option value="plot">Plot priority</option>
+                <option value="faction">Faction</option>
+                <option value="alphabetical">Alphabetical</option>
+              </select>
+            </label>
+            <label class="legend-setting">
+              <input id="show-all-available" type="checkbox">
+              <span>Show all available places and characters</span>
+            </label>
+            <label class="legend-setting">
+              <input id="dark-mode-toggle" type="checkbox">
+              <span>Dark mode</span>
+            </label>
+          </div>
+        </details>
+      </div>
     </aside>
   </div>
   <footer class="site-footer">

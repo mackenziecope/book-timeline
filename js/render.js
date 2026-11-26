@@ -288,6 +288,10 @@ function initializeDynamicLegend() {
   const locationsEl = document.getElementById("legend-locations");
   const charactersEl = document.getElementById("legend-characters");
   const countEl = document.getElementById("legend-count");
+  const locationCountEl = document.getElementById("legend-location-count");
+  const characterCountEl = document.getElementById("legend-character-count");
+  const locationGroup = document.getElementById("legend-locations-group");
+  const characterGroup = document.getElementById("legend-characters-group");
   if (!legend || !locationsEl || !charactersEl || !countEl) return;
   const header = document.querySelector(".site-header");
   const updateHeaderOffset = () => {
@@ -372,16 +376,18 @@ function initializeDynamicLegend() {
     const characters = sortCharacters([...new Map(sourceBadges.map(el => [el.dataset.character, el])).entries()]);
     legend.hidden = locations.length === 0 && characters.length === 0;
     countEl.textContent = locations.length + " places · " + characters.length + " people";
+    if (locationCountEl) locationCountEl.textContent = locations.length;
+    if (characterCountEl) characterCountEl.textContent = characters.length;
+    if (locationGroup) locationGroup.hidden = locations.length === 0;
+    if (characterGroup) characterGroup.hidden = characters.length === 0;
     locationsEl.replaceChildren();
     locationsEl.hidden = false;
     if (locations.length) {
-      const heading = document.createElement("h3"); heading.textContent = "Locations"; locationsEl.appendChild(heading);
       locations.forEach(el => addLegendItem(locationsEl, el.dataset.location, "", el.dataset.locationColor, "square", "location", el.dataset.location));
     }
     charactersEl.replaceChildren();
     charactersEl.hidden = false;
     if (characters.length) {
-      const heading = document.createElement("h3"); heading.textContent = "Characters"; charactersEl.appendChild(heading);
       characters.forEach(([code, el]) => {
         addLegendItem(charactersEl, el.dataset.characterName || CHARACTER_NAMES[code] || code, code, el.style.backgroundColor, "hex", "character", code);
       });
@@ -480,6 +486,7 @@ function initializeDynamicLegend() {
     requestAnimationFrame(() => { scheduled = false; updateLegend(); });
   };
   window.addEventListener("scroll", scheduleUpdate, { passive: true });
+  document.getElementById("timeline-map")?.addEventListener("scroll", scheduleUpdate, { passive: true });
   window.addEventListener("resize", scheduleUpdate);
   if ("IntersectionObserver" in window) {
     const observer = new IntersectionObserver(scheduleUpdate, { rootMargin: "88px 0px 0px 0px" });
