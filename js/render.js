@@ -16,6 +16,7 @@ const characterColorMap = {};
 const activeCharacterSelections = new Set();
 let activeLocationSelection = null;
 const characterOrderMap = {};
+const locationOrderMap = {};
 const CHARACTER_NAMES = {};
 const CHARACTER_FACTIONS = {};
 const firstStepPerBook = {};
@@ -112,6 +113,10 @@ document.addEventListener("DOMContentLoaded", () => {
       if (/^#?(?:[0-9a-f]{3}|[0-9a-f]{6})$/i.test(suppliedColor)) {
         locationColorMap[name] = suppliedColor.startsWith("#") ? suppliedColor : "#" + suppliedColor;
       }
+      const suppliedOrder = String(row.order ?? "").trim();
+      if (suppliedOrder !== "" && Number.isFinite(Number(suppliedOrder))) {
+        locationOrderMap[name] = Number(suppliedOrder);
+      }
     });
     characterParsed.data.forEach(row => {
       if (!row.code) return;
@@ -140,8 +145,18 @@ function renderTimeline(data) {
     const row = document.createElement("div");
     row.className = "location-row";
     const currentStepLocations = {};
-    Object.entries(step).forEach(([field, value]) => {
-      if (NON_LOCATION_FIELDS.includes(field)) return;
+    const locationEntries = Object.entries(step)
+      .filter(([field]) => !NON_LOCATION_FIELDS.includes(field))
+      .map(([field, value], index) => ({ field, value, index }))
+      .sort((a, b) => {
+        const aOrder = locationOrderMap[a.field];
+        const bOrder = locationOrderMap[b.field];
+        if (aOrder !== undefined && bOrder !== undefined) return aOrder - bOrder || a.index - b.index;
+        if (aOrder !== undefined) return -1;
+        if (bOrder !== undefined) return 1;
+        return a.index - b.index;
+      });
+    locationEntries.forEach(({ field, value }) => {
       const rawEntries = value ? value.replace(/"/g, "").split(",") : [];
       const chars = rawEntries.map(v => v.trim()).filter(Boolean);
       const sortedChars = [...chars].sort((a, b) => (characterOrderMap[a] ?? 999) - (characterOrderMap[b] ?? 999));
