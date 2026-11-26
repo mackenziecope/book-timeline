@@ -14,6 +14,11 @@ const FACTION_OVERRIDES = activeStory.factionOverrides || {};
 const BOOK_LABELS = activeStory.bookLabels || {};
 
 const renderedDeaths = new Set();
+const LOCATION_COLORS = ["#dce9f2", "#e8dfef", "#dcece3", "#f2e5d5", "#f3dfe1", "#e4e8d4", "#dce8e8", "#eee2d2"];
+const BADGE_COLORS = ["#355c7d", "#6c4f7d", "#39735b", "#a45c35", "#8a4b5e", "#65733d", "#35717a", "#765b3c"];
+const locationColorMap = {};
+const characterColorMap = {};
+let legendObserver = null;
 const characterOrderMap = {};
 const firstStepPerBook = {};
 let prevStepLocations = {};
@@ -24,6 +29,27 @@ function getFaction(character, stepId) {
     DEFAULT_FACTION[character] ||
     "neutral"
   );
+}
+
+function stableColor(value, palette) {
+  const key = String(value || "");
+  let hash = 0;
+  for (let i = 0; i < key.length; i++) hash = (hash * 31 + key.charCodeAt(i)) >>> 0;
+  return palette[hash % palette.length];
+}
+
+function getLocationColor(location) {
+  if (!locationColorMap[location]) {
+    locationColorMap[location] = stableColor(location, LOCATION_COLORS);
+  }
+  return locationColorMap[location];
+}
+
+function getCharacterColor(character) {
+  if (!characterColorMap[character]) {
+    characterColorMap[character] = stableColor(character, BADGE_COLORS);
+  }
+  return characterColorMap[character];
 }
 
 function fetchOptionalCsv(url) {
@@ -49,9 +75,9 @@ function applyStoryMetadata() {
     navEl.innerHTML = Object.entries(STORIES)
       .map(([key, cfg]) => {
         const activeClass = key === storyKey ? "active" : "";
-        return `<a href="?story=${encodeURIComponent(key)}" class="${activeClass}">${cfg.title}</a>`;
+        return `<a href="?story=${encodeURIComponent(key)}" class="${activeClass}" ${key === storyKey ? 'aria-current="page"' : ""}>${cfg.title}</a>`;
       })
-      .join(" | ");
+      .join("");
   }
 }
 
@@ -83,8 +109,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // Load location default factions
     locationsParsed.data.forEach(row => {
-      if (row.Location && row.default_faction) {
-        LOCATION_DEFAULT_FACTIONS[row.Location.trim()] = row.default_faction.trim().toLowerCase();
+      if (!row.Location) return;
+      const name = row.Location.trim();
+      if (row.default_faction) LOCATION_DEFAULT_FACTIONS[name] = row.default_faction.trim().toLowerCase();
+      const suppliedColor = (row.hex || row.color || "").trim();
+      if (suppliedColor) {
+        locationColorMap[name] = suppliedColor.startsWith("#") ? suppliedColor : "#" + suppliedColor;
       }
     });
 
@@ -95,6 +125,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     renderTimeline(timelineParsed.data);
+    initializeDynamicLegend();
   });
 });
 
@@ -155,9 +186,10 @@ function renderTimeline(data) {
       box.dataset.location = field;
       box.innerHTML = `<div class="location-title">${field}</div>`;
 
-      const locationFaction = LOCATION_DEFAULT_FACTIONS[field] || "neutral";
-      const boxColor = FACTIONS[locationFaction]?.color || "#999";
+      const boxColor = getLocationColor(field);
       box.style.borderColor = boxColor;
+      box.style.backgroundColor = boxColor + "22";
+      box.dataset.locationColor = boxColor;
 
       if (finalEntries.length) {
         const badges = document.createElement("div");
@@ -173,7 +205,8 @@ function renderTimeline(data) {
           badge.className = "hex";
           badge.textContent = code;
           const factionKey = getFaction(code, stepIndex);
-          badge.style.backgroundColor = FACTIONS[factionKey]?.color || "#999";
+          badge.style.backgroundColor = FACTIONS[factionKey]?.color || getCharacterColor(code);
+          badge.dataset.character = code;
           badges.appendChild(badge);
         });
         box.appendChild(badges);
@@ -213,4 +246,55 @@ function renderTimeline(data) {
 
     container.appendChild(stepEl);
   });
+}
+
+
+/* --- Dynamic legend for the location boxes and character badges in view --- */
+function initializeDynamicLegend() {
+  const legend = document.getElementById("timeline-legend");
+  const locationsEl = document.getElementById("legend-locations");
+  const charactersEl = document.getElementById("legend-characters");
+  const countEl = document.getElementById("legend-count");
+  if (!legend || !locationsEl || !charactersEl || !countEl) return;
+
+  const updateLegend = () => {
+    const visible = element => {
+      const rect = element.getBoundingClientRect();
+      return rect.bottom > 72 && rect.top < window.innerHeight;
+    };
+    const visibleBoxes = [...document.querySelectorAll(".location-box")].filter(visible);
+    const visibleBadges = [...document.querySelectorAll(".location-box .hex:not(.rip)")].filter(visible);
+    const locations = [...new Map(visibleBoxes.map(el => [el.dataset.location, el])).values()];
+    const characters = [...new Map(visibleBadges.map(el => [el.dataset.character, el])).entries()];
+
+    legend.hidden = locations.length === 0 && characters.length === 0;
+    countEl.textContent = locations.length + " locations · " + characters.length + " characters";
+    locationsEl.innerHTML = locations.length
+      ? "<h3>Locations</h3>" + locations.map(el =>
+          `<span class="legend-item"><i class="legend-swatch" style="background:${el.dataset.locationColor}"></i>${el.dataset.location}</span>`
+        ).join("")
+      : "";
+    charactersEl.innerHTML = characters.length
+      ? "<h3>Characters</h3>" + characters.map(([code, el]) =>
+          `<span class="legend-item"><i class="legend-swatch legend-badge" style="background:${el.style.backgroundColor}"></i>${code}</span>`
+        ).join("")
+      : "";
+  };
+
+  let scheduled = false;
+  const scheduleUpdate = () => {
+    if (scheduled) return;
+    scheduled = true;
+    requestAnimationFrame(() => {
+      scheduled = false;
+      updateLegend();
+    });
+  };
+  window.addEventListener("scroll", scheduleUpdate, { passive: true });
+  window.addEventListener("resize", scheduleUpdate);
+  if ("IntersectionObserver" in window) {
+    legendObserver = new IntersectionObserver(scheduleUpdate, { rootMargin: "72px 0px 0px 0px" });
+    document.querySelectorAll(".location-box, .location-box .hex:not(.rip)").forEach(el => legendObserver.observe(el));
+  }
+  updateLegend();
 }
