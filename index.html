@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Story Atlas</title>
   <meta name="theme-color" content="#24394b">
-  <meta name="description" content="Explore character movements and story timelines through interactive location maps.">
+  <meta name="description" content="Explore character movements and story timelines.">
   <link rel="icon" type="image/svg+xml" href="assets/story-atlas.svg">
   <link rel="stylesheet" href="css/timeline.css">
   <link id="story-stylesheet" rel="stylesheet" href="css/throne-of-glass.css">
@@ -34,10 +34,16 @@
         <button id="clear-selection" type="button" hidden>Clear</button>
         <details class="legend-settings">
           <summary>Settings</summary>
-          <label class="legend-setting">
-            <input id="hide-unchanged-locations" type="checkbox">
-            <span>Hide unchanged places</span>
-          </label>
+          <div class="legend-settings-options">
+            <label class="legend-setting">
+              <input id="hide-unchanged-locations" type="checkbox">
+              <span>Hide unchanged places</span>
+            </label>
+            <label class="legend-setting">
+              <input id="dark-mode-toggle" type="checkbox">
+              <span>Dark mode</span>
+            </label>
+          </div>
         </details>
       </div>
     </div>
