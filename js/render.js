@@ -193,6 +193,10 @@ function renderTimeline(data) {
           badge.dataset.character = code;
           badge.dataset.characterName = CHARACTER_NAMES[code] || code;
           badge.dataset.faction = factionKey;
+          badge.tabIndex = 0;
+          badge.setAttribute("role", "button");
+          badge.setAttribute("aria-label", "Select character " + (CHARACTER_NAMES[code] || code));
+          badge.setAttribute("aria-pressed", "false");
           badge.title = (CHARACTER_NAMES[code] || code) + " · " + (FACTIONS[factionKey]?.label || factionKey);
           badges.appendChild(badge);
         });
@@ -282,8 +286,10 @@ function initializeDynamicLegend() {
   const updateSelectionHighlights = () => {
     document.querySelectorAll(".location-box").forEach(box => box.classList.toggle("is-selected-location", box.dataset.location === activeLocationSelection));
     document.querySelectorAll(".location-box .hex:not(.rip)").forEach(badge => {
-      badge.classList.toggle("is-selected-character", activeCharacterSelections.has(badge.dataset.character));
-      badge.classList.toggle("is-dimmed-character", activeCharacterSelections.size > 0 && !activeCharacterSelections.has(badge.dataset.character));
+      const selected = activeCharacterSelections.has(badge.dataset.character);
+      badge.classList.toggle("is-selected-character", selected);
+      badge.classList.toggle("is-dimmed-character", activeCharacterSelections.size > 0 && !selected);
+      badge.setAttribute("aria-pressed", String(selected));
     });
     document.querySelectorAll(".legend-item[data-type]").forEach(item => {
       const selected = item.dataset.type === "character" ? activeCharacterSelections.has(item.dataset.key) : activeLocationSelection === item.dataset.key;
@@ -309,14 +315,32 @@ function initializeDynamicLegend() {
     activeCharacterSelections.clear(); activeLocationSelection = null; updateSelectionHighlights();
   });
   document.getElementById("timeline-map").addEventListener("click", event => {
+    const badge = event.target.closest(".location-box .hex:not(.rip)");
+    if (badge) {
+      const code = badge.dataset.character;
+      if (activeCharacterSelections.has(code)) activeCharacterSelections.delete(code);
+      else activeCharacterSelections.add(code);
+      activeLocationSelection = null;
+      updateSelectionHighlights();
+      return;
+    }
     const box = event.target.closest(".location-box");
     if (!box) return;
     activeLocationSelection = activeLocationSelection === box.dataset.location ? null : box.dataset.location;
     activeCharacterSelections.clear(); updateSelectionHighlights();
   });
   document.getElementById("timeline-map").addEventListener("keydown", event => {
-    if ((event.key !== "Enter" && event.key !== " ") || !event.target.matches(".location-box")) return;
-    event.preventDefault(); event.target.click();
+    if (event.key !== "Enter" && event.key !== " ") return;
+    if (event.target.matches(".location-box .hex:not(.rip)")) {
+      event.preventDefault();
+      event.stopPropagation();
+      event.target.click();
+      return;
+    }
+    if (event.target.matches(".location-box")) {
+      event.preventDefault();
+      event.target.click();
+    }
   });
 
 
