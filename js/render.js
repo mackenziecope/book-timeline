@@ -14,8 +14,8 @@ const FACTION_OVERRIDES = activeStory.factionOverrides || {};
 const BOOK_LABELS = activeStory.bookLabels || {};
 
 const renderedDeaths = new Set();
-const LOCATION_COLORS = ["#dce9f2", "#e8dfef", "#dcece3", "#f2e5d5", "#f3dfe1", "#e4e8d4", "#dce8e8", "#eee2d2"];
-const BADGE_COLORS = ["#355c7d", "#6c4f7d", "#39735b", "#a45c35", "#8a4b5e", "#65733d", "#35717a", "#765b3c"];
+const locationColorOrder = [];
+const characterColorOrder = [];
 const locationColorMap = {};
 const characterColorMap = {};
 let legendObserver = null;
@@ -31,23 +31,24 @@ function getFaction(character, stepId) {
   );
 }
 
-function stableColor(value, palette) {
-  const key = String(value || "");
-  let hash = 0;
-  for (let i = 0; i < key.length; i++) hash = (hash * 31 + key.charCodeAt(i)) >>> 0;
-  return palette[hash % palette.length];
+function generatedColor(index, saturation, lightness) {
+  // Golden-angle spacing keeps neighboring entries visually distinct.
+  const hue = (index * 137.508) % 360;
+  return `hsl(${hue.toFixed(1)} ${saturation}% ${lightness}%)`;
 }
 
 function getLocationColor(location) {
   if (!locationColorMap[location]) {
-    locationColorMap[location] = stableColor(location, LOCATION_COLORS);
+    locationColorOrder.push(location);
+    locationColorMap[location] = generatedColor(locationColorOrder.length - 1, 42, 82);
   }
   return locationColorMap[location];
 }
 
 function getCharacterColor(character) {
   if (!characterColorMap[character]) {
-    characterColorMap[character] = stableColor(character, BADGE_COLORS);
+    characterColorOrder.push(character);
+    characterColorMap[character] = generatedColor(characterColorOrder.length - 1, 48, 34);
   }
   return characterColorMap[character];
 }
@@ -113,7 +114,7 @@ document.addEventListener("DOMContentLoaded", () => {
       const name = row.Location.trim();
       if (row.default_faction) LOCATION_DEFAULT_FACTIONS[name] = row.default_faction.trim().toLowerCase();
       const suppliedColor = (row.hex || row.color || "").trim();
-      if (suppliedColor) {
+      if (/^#?(?:[0-9a-f]{3}|[0-9a-f]{6})$/i.test(suppliedColor)) {
         locationColorMap[name] = suppliedColor.startsWith("#") ? suppliedColor : "#" + suppliedColor;
       }
     });
@@ -188,7 +189,7 @@ function renderTimeline(data) {
 
       const boxColor = getLocationColor(field);
       box.style.borderColor = boxColor;
-      box.style.backgroundColor = boxColor + "22";
+      box.style.setProperty("--location-color", boxColor);
       box.dataset.locationColor = boxColor;
 
       if (finalEntries.length) {
