@@ -367,9 +367,12 @@ function initializeDynamicLegend() {
   const showAllAvailable = document.getElementById("show-all-available");
   const showNotesLabels = document.getElementById("show-notes-labels");
   const standardizeWidths = document.getElementById("standardize-location-widths");
-  const settingsKey = "story-atlas-layout-" + storyKey;
+  const legacySettingsKey = "story-atlas-layout-" + storyKey;
+  const settingsKey = "story-atlas-layout";
   let savedLayout = {};
-  try { savedLayout = JSON.parse(localStorage.getItem(settingsKey) || "{}"); } catch {}
+  try {
+    savedLayout = JSON.parse(localStorage.getItem(settingsKey) || localStorage.getItem(legacySettingsKey) || "{}");
+  } catch {}
   if (locationSort) locationSort.value = savedLayout.locationSort || "plot";
   if (characterSort) characterSort.value = savedLayout.characterSort || "plot";
   if (showAllAvailable) showAllAvailable.checked = savedLayout.showAllAvailable === true;
