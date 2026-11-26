@@ -655,3 +655,11 @@ body.has-story-map #timeline-map { grid-row:3; }
   body.has-story-map .timeline-legend { grid-row:3; }
   body.has-story-map #timeline-map { grid-row:4; }
 }
+
+
+body:not(.has-story-map) .timeline-legend { grid-row:2; }
+body:not(.has-story-map) #timeline-map { grid-row:2; }
+@media (max-width:820px) {
+  body:not(.has-story-map) .timeline-legend { grid-row:2; }
+  body:not(.has-story-map) #timeline-map { grid-row:3; }
+}
