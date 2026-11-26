@@ -110,7 +110,7 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     });
     locationsParsed.data.forEach((row, rowIndex) => {
-      const rawName = getCsvField(row, "Location");
+      const rawName = getCsvField(row, "name");
       if (!rawName || !String(rawName).trim()) return;
       const name = String(rawName).trim();
       const key = normalizeLocationKey(name);
