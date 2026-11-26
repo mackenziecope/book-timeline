@@ -1391,3 +1391,29 @@ body { grid-template-rows: auto minmax(0, 1fr); }
 @media (max-width: 760px) {
   body { grid-template-rows: auto minmax(0, 1fr); }
 }
+
+
+/* Selection summary and non-overlapping Field Guide header controls. */
+.legend-heading { position: static; align-items: center; margin-bottom: 0; }
+.legend-heading > div { min-width: 0; }
+.legend-heading strong { padding-right: 0; }
+.legend-heading-actions { display: none; }
+.legend-settings-toggle { position: static; flex: 0 0 auto; }
+.selection-toolbar {
+  display: flex; align-items: center; justify-content: space-between; gap: 10px;
+  min-height: 34px; padding: 5px 15px; border-bottom: 1px solid var(--atlas-line);
+  color: var(--atlas-muted); font-size: .72rem;
+}
+.selection-toolbar[hidden] { display: none !important; }
+#clear-selection {
+  flex: 0 0 auto; padding: 4px 9px; border: 1px solid #d5c6ae; border-radius: 999px;
+  color: #72552f; background: #fbf7ef; font: inherit; font-size: .7rem;
+  font-weight: 650; cursor: pointer;
+}
+#clear-selection:hover { background: #f0e5d3; }
+.dark-mode #clear-selection { color: #e7d6b8; background: #3b3328; border-color: #75634b; }
+.dark-mode .selection-toolbar { border-color: var(--atlas-line); }
+@media (max-width: 760px) {
+  .legend-heading { padding: 8px 12px; }
+  .selection-toolbar { padding: 4px 12px; }
+}
