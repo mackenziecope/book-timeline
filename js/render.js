@@ -455,7 +455,7 @@ function initializeDynamicLegend() {
     document.body.classList.toggle("dark-mode", darkModeToggle.checked);
     localStorage.setItem("story-atlas-theme", darkModeToggle.checked ? "dark" : "light");
   });
-  const hideUnchangedToggle = document.getElementById("hide-unchanged-locations");
+  const hideUnchangedToggle = document.getElementById("show-unchanged-locations");
   const applyUnchangedFilter = () => {
     document.querySelectorAll(".location-row").forEach(row => {
       const boxes = [...row.querySelectorAll(".location-box")];
@@ -465,7 +465,7 @@ function initializeDynamicLegend() {
     updateLegend();
   };
   if (hideUnchangedToggle) {
-    hideUnchangedToggle.checked = savedLayout.hideUnchanged !== false;
+    hideUnchangedToggle.checked = savedLayout.showUnchanged === true;
     applyUnchangedFilter();
     hideUnchangedToggle.addEventListener("change", () => { saveLayout(); applyUnchangedFilter(); });
   }
