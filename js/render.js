@@ -338,7 +338,9 @@ function initializeDynamicLegend() {
   const compareFaction = (a, b) => {
     const aKey = (locationFactionMap[normalizeLocationKey(a.dataset.location)] || "").toLowerCase();
     const bKey = (locationFactionMap[normalizeLocationKey(b.dataset.location)] || "").toLowerCase();
-    return factionLabel(aKey).localeCompare(factionLabel(bKey)) || a.dataset.location.localeCompare(b.dataset.location);
+    return (factionOrderMap[aKey] ?? 999999) - (factionOrderMap[bKey] ?? 999999)
+      || factionLabel(aKey).localeCompare(factionLabel(bKey))
+      || a.dataset.location.localeCompare(b.dataset.location);
   };
   const sortLocations = locations => {
     const mode = locationSort?.value || "plot";
@@ -357,7 +359,8 @@ function initializeDynamicLegend() {
     const mode = characterSort?.value || "plot";
     return characters.sort(([codeA, elA], [codeB, elB]) => {
       if (mode === "alphabetical") return (elA.dataset.characterName || codeA).localeCompare(elB.dataset.characterName || codeB);
-      if (mode === "faction") return factionLabel(elA.dataset.faction).localeCompare(factionLabel(elB.dataset.faction))
+      if (mode === "faction") return (factionOrderMap[elA.dataset.faction] ?? 999999) - (factionOrderMap[elB.dataset.faction] ?? 999999)
+        || factionLabel(elA.dataset.faction).localeCompare(factionLabel(elB.dataset.faction))
         || (characterOrderMap[codeA] ?? 999999) - (characterOrderMap[codeB] ?? 999999)
         || codeA.localeCompare(codeB);
       return (characterOrderMap[codeA] ?? 999999) - (characterOrderMap[codeB] ?? 999999) || codeA.localeCompare(codeB);
