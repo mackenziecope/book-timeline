@@ -330,7 +330,7 @@ function initializeDynamicLegend() {
       characterSort: characterSort?.value || "plot",
       showLocationList: !!showLocationList?.checked,
       showCharacterList: !!showCharacterList?.checked,
-      hideUnchanged: !!hideUnchangedToggle?.checked
+      showUnchanged: !!hideUnchangedToggle?.checked
     };
     localStorage.setItem(settingsKey, JSON.stringify(savedLayout));
   };
