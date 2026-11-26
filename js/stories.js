@@ -1,18 +1,31 @@
+function buildSheetUrls(pubBaseUrl, gids) {
+  const build = gid =>
+    gid !== undefined && gid !== null && String(gid).trim() !== ""
+      ? `${pubBaseUrl}?gid=${String(gid).trim()}&single=true&output=csv`
+      : "";
+
+  return {
+    timeline: build(gids.places),
+    characters: build(gids.characters),
+    locations: build(gids.locations),
+    factions: build(gids.factions)
+  };
+}
+
 const STORIES = {
   "throne-of-glass": {
     title: "Throne of Glass Timeline",
     heading: "A Logistical Record of Throne of Glass",
     stylesheet: "css/throne-of-glass.css",
-    sheets: {
-      timeline:
-        "https://docs.google.com/spreadsheets/d/e/2PACX-1vTj4mIQNaRGqy8JbMyAHjDnQH-BbAry72Mtqrt3oxVvp8buPELwwgfHXlb7eBRHBOsAZ010z8Sl5Vd5/pub?gid=0&single=true&output=csv",
-      characters:
-        "https://docs.google.com/spreadsheets/d/e/2PACX-1vTj4mIQNaRGqy8JbMyAHjDnQH-BbAry72Mtqrt3oxVvp8buPELwwgfHXlb7eBRHBOsAZ010z8Sl5Vd5/pub?gid=1645073460&single=true&output=csv",
-      factions:
-        "https://docs.google.com/spreadsheets/d/e/2PACX-1vTj4mIQNaRGqy8JbMyAHjDnQH-BbAry72Mtqrt3oxVvp8buPELwwgfHXlb7eBRHBOsAZ010z8Sl5Vd5/pub?gid=805785660&single=true&output=csv",
-      locations:
-        "https://docs.google.com/spreadsheets/d/e/2PACX-1vTj4mIQNaRGqy8JbMyAHjDnQH-BbAry72Mtqrt3oxVvp8buPELwwgfHXlb7eBRHBOsAZ010z8Sl5Vd5/pub?gid=1557750733&single=true&output=csv"
-    },
+    sheets: buildSheetUrls(
+      "https://docs.google.com/spreadsheets/d/e/2PACX-1vTj4mIQNaRGqy8JbMyAHjDnQH-BbAry72Mtqrt3oxVvp8buPELwwgfHXlb7eBRHBOsAZ010z8Sl5Vd5/pub",
+      {
+        places: 0,
+        characters: 1645073460,
+        factions: 805785660,
+        locations: 1557750733
+      }
+    ),
     bookLabels: {
       0: "0 - Assassin's Blade",
       1: "1 - Throne of Glass",
@@ -24,23 +37,21 @@ const STORIES = {
     },
     defaultFactions: {},
     factionOverrides: {}
-  }
-};
+  },
 
-const DEFAULT_STORY_KEY = "throne-of-glass";
-
-"potc": {
+  "potc": {
     title: "Pirates of the Caribbean Timeline",
     heading: "A Logistical Record of Pirates of the Caribbean",
-    stylesheet: "css/potc.css",
-    sheets: {
-      timeline:
-        "https://docs.google.com/spreadsheets/d/e/2PACX-1vRm2A7AjU24PenOMYQ6Zokr3qIsBqQjJFcbkvLfPX2Bm3Ir6GTcs9V6YgpQ0nG3btyKX3H4dIWkPK57/pub?gid=0&single=true&output=csv",
-      // Optional: update these gids once you add/format Characters, Factions, or Locations tabs
-      characters: "",
-      factions: "",
-      locations: ""
-    },
+    stylesheet: "",
+    sheets: buildSheetUrls(
+      "https://docs.google.com/spreadsheets/d/e/2PACX-1vRm2A7AjU24PenOMYQ6Zokr3qIsBqQjJFcbkvLfPX2Bm3Ir6GTcs9V6YgpQ0nG3btyKX3H4dIWkPK57/pub",
+      {
+        places: 0,
+        characters: 1987949162,
+        locations: 80064090,
+        factions: 871614265
+      }
+    ),
     bookLabels: {
       1: "1 - The Curse of the Black Pearl",
       2: "2 - Dead Man's Chest",
@@ -49,3 +60,6 @@ const DEFAULT_STORY_KEY = "throne-of-glass";
     defaultFactions: {},
     factionOverrides: {}
   }
+};
+
+const DEFAULT_STORY_KEY = "throne-of-glass";
