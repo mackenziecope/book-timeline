@@ -21,6 +21,9 @@
         <h1 id="timeline-heading" class="timeline-title">A Logistical Record of Throne of Glass</h1>
       </div>
       <nav class="story-switcher" aria-label="Story selection">
+        <button id="story-menu-toggle" class="story-menu-toggle" type="button" aria-expanded="false" aria-controls="story-nav">
+          <span aria-hidden="true">☰</span> <span>Choose story</span>
+        </button>
         <span class="story-switcher-label">Explore a story</span>
         <div id="story-nav"></div>
       </nav>
@@ -40,9 +43,9 @@
         </div>
       </div>
       <div class="legend-tabs" role="tablist" aria-label="Field Guide">
-        <button class="legend-tab is-active" id="tab-characters" type="button" role="tab" aria-selected="true" aria-controls="panel-characters" data-tab="characters">Characters <span id="legend-character-count" class="legend-tab-count"></span></button>
-        <button class="legend-tab" id="tab-locations" type="button" role="tab" aria-selected="false" aria-controls="panel-locations" data-tab="locations" tabindex="-1">Locations <span id="legend-location-count" class="legend-tab-count"></span></button>
-        <button class="legend-tab" id="tab-settings" type="button" role="tab" aria-selected="false" aria-controls="panel-settings" data-tab="settings" tabindex="-1">Settings</button>
+        <button class="legend-tab is-active" id="tab-characters" type="button" role="tab" aria-label="Characters" title="Characters" aria-selected="true" aria-controls="panel-characters" data-tab="characters"><span class="legend-tab-icon" aria-hidden="true">♟</span><span id="legend-character-count" class="legend-tab-count"></span></button>
+        <button class="legend-tab" id="tab-locations" type="button" role="tab" aria-label="Locations" title="Locations" aria-selected="false" aria-controls="panel-locations" data-tab="locations" tabindex="-1"><span class="legend-tab-icon" aria-hidden="true">⌖</span><span id="legend-location-count" class="legend-tab-count"></span></button>
+        <button class="legend-tab" id="tab-settings" type="button" role="tab" aria-label="Settings" title="Settings" aria-selected="false" aria-controls="panel-settings" data-tab="settings" tabindex="-1"><span class="legend-tab-icon" aria-hidden="true">⚙</span></button>
       </div>
       <div class="legend-panels">
         <section class="legend-panel" id="panel-characters" role="tabpanel" aria-labelledby="tab-characters">
