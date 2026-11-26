@@ -207,6 +207,7 @@ function renderTimeline(data) {
       const boxColor = getLocationColor(field);
       box.style.borderColor = boxColor;
       box.style.setProperty("--location-color", boxColor);
+      box.style.backgroundColor = `color-mix(in srgb, ${boxColor} 13%, white)`;
       box.dataset.locationColor = boxColor;
 
       if (finalEntries.length) {
