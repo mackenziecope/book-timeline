@@ -19,8 +19,8 @@ const STORIES = {
     stylesheet: "css/throne-of-glass.css",
     map: {
       title: "Erilea",
-      image: "assets/maps/erilea-map.webp",
-      attribution: "Map artwork supplied for development; confirm reproduction permission before public deployment.",
+      image: "assets/maps/erilea-map.png",
+      attribution: "Temporary map image for development only. Replace with an appropriately licensed or permission-cleared map before public release.",
       locations: [
         { name: "Allsbrook", x: 67.5, y: 9.5 },
         { name: "Orynth", x: 76.5, y: 11.5 },
