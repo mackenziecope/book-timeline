@@ -224,12 +224,14 @@ function initializeStoryMap() {
   panel.hidden = false;
   document.body.classList.add("has-story-map");
   document.getElementById("story-map-title").textContent = config.title || "Story map";
+  const creditEl = document.getElementById("story-map-credit");
+  if (creditEl) creditEl.textContent = config.attribution || "";
   const image = document.getElementById("story-map-image");
   image.src = config.image;
   image.alt = "Map of " + (config.title || "the story world");
   image.addEventListener("error", () => {
     panel.classList.add("map-image-missing");
-    document.getElementById("story-map-help").textContent = "Map artwork is not yet installed. The interactive location layer is ready for the approved image.";
+    document.getElementById("story-map-help").textContent = "The configured map image could not be loaded. The interactive location layer is still available once the image path is corrected.";
   }, { once: true });
 
   const viewport = document.getElementById("story-map-viewport");
