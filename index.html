@@ -1,30 +1,19 @@
-const STORIES = {
-  "throne-of-glass": {
-    title: "Throne of Glass Timeline",
-    heading: "A Logistical Record of Throne of Glass",
-    stylesheet: "css/throne-of-glass.css",
-    sheets: {
-      timeline:
-        "https://docs.google.com/spreadsheets/d/e/2PACX-1vTj4mIQNaRGqy8JbMyAHjDnQH-BbAry72Mtqrt3oxVvp8buPELwwgfHXlb7eBRHBOsAZ010z8Sl5Vd5/pub?gid=0&single=true&output=csv",
-      characters:
-        "https://docs.google.com/spreadsheets/d/e/2PACX-1vTj4mIQNaRGqy8JbMyAHjDnQH-BbAry72Mtqrt3oxVvp8buPELwwgfHXlb7eBRHBOsAZ010z8Sl5Vd5/pub?gid=1645073460&single=true&output=csv",
-      factions:
-        "https://docs.google.com/spreadsheets/d/e/2PACX-1vTj4mIQNaRGqy8JbMyAHjDnQH-BbAry72Mtqrt3oxVvp8buPELwwgfHXlb7eBRHBOsAZ010z8Sl5Vd5/pub?gid=805785660&single=true&output=csv",
-      locations:
-        "https://docs.google.com/spreadsheets/d/e/2PACX-1vTj4mIQNaRGqy8JbMyAHjDnQH-BbAry72Mtqrt3oxVvp8buPELwwgfHXlb7eBRHBOsAZ010z8Sl5Vd5/pub?gid=1557750733&single=true&output=csv"
-    },
-    bookLabels: {
-      0: "0 - Assassin's Blade",
-      1: "1 - Throne of Glass",
-      2: "2 - Crown of Midnight",
-      3: "3 - Heir of Fire",
-      4: "4 - Queen of Shadows",
-      5.5: "5.5 - Empire of Storms / Tower of Dawn",
-      7: "7 - Kingdom of Ash"
-    },
-    defaultFactions: {},
-    factionOverrides: {}
-  }
-};
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Timeline Viewer</title>
+  <link rel="stylesheet" href="css/timeline.css">
+  <link id="story-stylesheet" rel="stylesheet" href="css/throne-of-glass.css">
+</head>
+<body>
+  <nav id="story-nav" aria-label="Choose a timeline"></nav>
+  <h1 id="timeline-heading" class="timeline-title">A Logistical Record of Throne of Glass</h1>
+  <main id="timeline-map"></main>
 
-const DEFAULT_STORY_KEY = "throne-of-glass";
+  <script src="js/papaparse.min.js"></script>
+  <script src="js/stories.js"></script>
+  <script src="js/render.js"></script>
+</body>
+</html>
