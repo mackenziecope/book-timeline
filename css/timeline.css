@@ -1363,3 +1363,31 @@ body {
 
 .timeline-legend.settings-open .legend-tabs { display:none; }
 .timeline-legend.settings-open .legend-settings-panel { display:block; }
+
+
+/* Settings now contain the credits; the page no longer reserves a footer row. */
+body { grid-template-rows: auto minmax(0, 1fr); }
+.legend-settings-about {
+  display: grid;
+  gap: 5px;
+  margin-top: 18px;
+  padding: 14px 2px 4px;
+  border-top: 1px solid var(--atlas-line);
+  color: var(--atlas-muted);
+  font-size: .76rem;
+  line-height: 1.45;
+}
+.legend-settings-about p { margin: 0; }
+.legend-settings-about strong { color: var(--atlas-ink); }
+.legend-settings-about a {
+  width: fit-content;
+  color: #6b5437;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+}
+.legend-settings-about a:hover { color: var(--atlas-ink); }
+.dark-mode .legend-settings-about a { color: #d5b98e; }
+.dark-mode .legend-settings-about a:hover { color: #fff; }
+@media (max-width: 760px) {
+  body { grid-template-rows: auto minmax(0, 1fr); }
+}
