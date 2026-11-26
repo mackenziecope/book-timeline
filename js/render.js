@@ -361,7 +361,7 @@ function initializeDynamicLegend() {
     };
     localStorage.setItem(settingsKey, JSON.stringify(savedLayout));
   };
-  const factionLabel = key => FACTIONS[key]?.label || key || "Unaligned";
+  const factionLabel = key => !key || key === "neutral" ? "Unaligned" : (FACTIONS[key]?.label || key);
   const compareFaction = (a, b) => {
     const aKey = (locationFactionMap[normalizeLocationKey(a.dataset.location)] || "").toLowerCase();
     const bKey = (locationFactionMap[normalizeLocationKey(b.dataset.location)] || "").toLowerCase();
@@ -399,8 +399,9 @@ function initializeDynamicLegend() {
       sortLocations(boxes).forEach(box => row.appendChild(box));
       row.querySelectorAll(".badges").forEach(badges => {
         const children = [...badges.children];
-        const sortedBadges = sortCharacters(children.filter(child => child.matches(".hex:not(.rip)")).map(el => [el.dataset.character, el]));
-          .map(entry => entry[1]);
+        const sortedBadges = sortCharacters(
+          children.filter(child => child.matches(".hex:not(.rip)")).map(el => [el.dataset.character, el])
+        ).map(entry => entry[1]);
         let nextBadge = 0;
         const reordered = children.map(child => child.matches(".hex:not(.rip)") ? sortedBadges[nextBadge++] : child);
         badges.replaceChildren(...reordered);
