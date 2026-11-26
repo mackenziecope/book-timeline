@@ -17,6 +17,9 @@ const activeCharacterSelections = new Set();
 let activeLocationSelection = null;
 const characterOrderMap = {};
 const locationOrderMap = {};
+const locationRowOrderMap = {};
+const normalizeLocationKey = location => String(location || "").trim().toLowerCase();
+const getCsvField = (row, field) => Object.entries(row).find(([key]) => key.trim().toLowerCase() === field.toLowerCase())?.[1];
 const CHARACTER_NAMES = {};
 const CHARACTER_FACTIONS = {};
 const firstStepPerBook = {};
@@ -106,16 +109,19 @@ document.addEventListener("DOMContentLoaded", () => {
         FACTIONS[key] = { color: "#" + row.hex.trim().replace(/^#/, ""), label: (row.name || row.default_faction).trim() };
       }
     });
-    locationsParsed.data.forEach(row => {
-      if (!row.Location) return;
-      const name = row.Location.trim();
-      const suppliedColor = (row.hex || row.color || "").trim();
+    locationsParsed.data.forEach((row, rowIndex) => {
+      const rawName = getCsvField(row, "Location");
+      if (!rawName || !String(rawName).trim()) return;
+      const name = String(rawName).trim();
+      const key = normalizeLocationKey(name);
+      locationRowOrderMap[key] = rowIndex;
+      const suppliedColor = String(getCsvField(row, "hex") || getCsvField(row, "color") || "").trim();
       if (/^#?(?:[0-9a-f]{3}|[0-9a-f]{6})$/i.test(suppliedColor)) {
         locationColorMap[name] = suppliedColor.startsWith("#") ? suppliedColor : "#" + suppliedColor;
       }
-      const suppliedOrder = String(row.order ?? "").trim();
+      const suppliedOrder = String(getCsvField(row, "order") ?? "").trim();
       if (suppliedOrder !== "" && Number.isFinite(Number(suppliedOrder))) {
-        locationOrderMap[name] = Number(suppliedOrder);
+        locationOrderMap[key] = Number(suppliedOrder);
       }
     });
     characterParsed.data.forEach(row => {
@@ -149,11 +155,18 @@ function renderTimeline(data) {
       .filter(([field]) => !NON_LOCATION_FIELDS.includes(field))
       .map(([field, value], index) => ({ field, value, index }))
       .sort((a, b) => {
-        const aOrder = locationOrderMap[a.field];
-        const bOrder = locationOrderMap[b.field];
-        if (aOrder !== undefined && bOrder !== undefined) return aOrder - bOrder || a.index - b.index;
-        if (aOrder !== undefined) return -1;
-        if (bOrder !== undefined) return 1;
+        const aKey = normalizeLocationKey(a.field);
+        const bKey = normalizeLocationKey(b.field);
+        const aOrder = locationOrderMap[aKey];
+        const bOrder = locationOrderMap[bKey];
+        const aRowOrder = locationRowOrderMap[aKey];
+        const bRowOrder = locationRowOrderMap[bKey];
+        if (aOrder !== undefined && bOrder !== undefined && aOrder !== bOrder) return aOrder - bOrder;
+        if (aOrder !== undefined && bOrder === undefined) return -1;
+        if (bOrder !== undefined && aOrder === undefined) return 1;
+        if (aRowOrder !== undefined && bRowOrder !== undefined) return aRowOrder - bRowOrder || a.index - b.index;
+        if (aRowOrder !== undefined) return -1;
+        if (bRowOrder !== undefined) return 1;
         return a.index - b.index;
       });
     locationEntries.forEach(({ field, value }) => {
