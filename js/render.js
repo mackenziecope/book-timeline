@@ -288,6 +288,7 @@ function renderTimeline(data) {
       notesEl.textContent = step.Notes.trim();
       stepEl.appendChild(notesEl);
     }
+    stepEl.id = "story-step-" + String(step.Book || "").trim().replace(/[^a-z0-9]+/gi, "-").toLowerCase() + "-" + stepIndex;
     stepEl.appendChild(row);
     container.appendChild(stepEl);
   });
@@ -301,6 +302,8 @@ function initializeDynamicLegend() {
   const locationCountEl = document.getElementById("legend-location-count");
   const characterCountEl = document.getElementById("legend-character-count");
   const tabButtons = [...legend.querySelectorAll(".legend-tab[data-tab]")];
+  const settingsToggle = document.getElementById("legend-settings-toggle");
+  const outlineEl = document.getElementById("legend-outline");
   const tabPanels = [...legend.querySelectorAll(".legend-panel")];
   if (!legend || !locationsEl || !charactersEl || !countEl) return;
   const header = document.querySelector(".site-header");
@@ -335,6 +338,7 @@ function initializeDynamicLegend() {
       if (active && focus) button.focus();
     });
     tabPanels.forEach(panel => { panel.hidden = panel.id !== "panel-" + tabName; });
+    if (settingsToggle) { settingsToggle.setAttribute("aria-expanded", String(tabName === "settings")); settingsToggle.setAttribute("aria-label", tabName === "settings" ? "Close field guide settings" : "Open field guide settings"); }
     try { localStorage.setItem("story-atlas-active-tab-" + storyKey, tabName); } catch {}
   };
   tabButtons.forEach((button, index) => {
@@ -347,6 +351,7 @@ function initializeDynamicLegend() {
       activateTab(tabButtons[next].dataset.tab, true);
     });
   });
+  settingsToggle?.addEventListener("click", () => activateTab(tabPanels.find(panel => !panel.hidden)?.id === "panel-settings" ? "characters" : "settings"));
   let savedTab = "characters";
   try { savedTab = localStorage.getItem("story-atlas-active-tab-" + storyKey) || savedTab; } catch {}
   activateTab(tabButtons.some(button => button.dataset.tab === savedTab) ? savedTab : "characters");
@@ -354,18 +359,24 @@ function initializeDynamicLegend() {
   const locationSort = document.getElementById("location-sort");
   const characterSort = document.getElementById("character-sort");
   const showAllAvailable = document.getElementById("show-all-available");
+  const showNotesLabels = document.getElementById("show-notes-labels");
+  const standardizeWidths = document.getElementById("standardize-location-widths");
   const settingsKey = "story-atlas-layout-" + storyKey;
   let savedLayout = {};
   try { savedLayout = JSON.parse(localStorage.getItem(settingsKey) || "{}"); } catch {}
   if (locationSort) locationSort.value = savedLayout.locationSort || "plot";
   if (characterSort) characterSort.value = savedLayout.characterSort || "plot";
   if (showAllAvailable) showAllAvailable.checked = savedLayout.showAllAvailable === true;
+  if (showNotesLabels) showNotesLabels.checked = savedLayout.showNotesLabels !== false;
+  if (standardizeWidths) standardizeWidths.checked = savedLayout.standardizeWidths === true;
   const saveLayout = () => {
     savedLayout = {
       ...savedLayout,
       locationSort: locationSort?.value || "plot",
       characterSort: characterSort?.value || "plot",
       showAllAvailable: !!showAllAvailable?.checked,
+      showNotesLabels: !!showNotesLabels?.checked,
+      standardizeWidths: !!standardizeWidths?.checked,
       showUnchanged: !!hideUnchangedToggle?.checked
     };
     localStorage.setItem(settingsKey, JSON.stringify(savedLayout));
@@ -406,6 +417,7 @@ function initializeDynamicLegend() {
     document.querySelectorAll(".location-row").forEach(row => {
       const boxes = [...row.querySelectorAll(":scope > .location-box")];
       sortLocations(boxes).forEach(box => row.appendChild(box));
+      row.classList.toggle("standardized-location-widths", !!standardizeWidths?.checked);
       row.querySelectorAll(".badges").forEach(badges => {
         const children = [...badges.children];
         const sortedBadges = sortCharacters(
@@ -425,7 +437,7 @@ function initializeDynamicLegend() {
     const locations = sortLocations([...new Map(sourceBoxes.map(el => [el.dataset.location, el])).values()]);
     const characters = sortCharacters([...new Map(sourceBadges.map(el => [el.dataset.character, el])).entries()]);
     legend.hidden = locations.length === 0 && characters.length === 0;
-    countEl.textContent = locations.length + " places · " + characters.length + " people";
+    countEl.textContent = "";
     if (locationCountEl) locationCountEl.textContent = locations.length;
     if (characterCountEl) characterCountEl.textContent = characters.length;
     locationsEl.replaceChildren();
@@ -441,6 +453,21 @@ function initializeDynamicLegend() {
       });
     }
     updateSelectionHighlights();
+    if (outlineEl && !outlineEl.dataset.built) {
+      const chapterSteps = [...document.querySelectorAll(".timeline-step")].filter(step => step.querySelector(".step-label"));
+      chapterSteps.forEach((step, index) => {
+        const li = document.createElement("li");
+        const link = document.createElement("a");
+        link.href = "#" + step.id;
+        link.textContent = (index + 1) + " - " + step.querySelector(".step-label").textContent.trim();
+        link.addEventListener("click", event => {
+          event.preventDefault();
+          step.scrollIntoView({ behavior: "smooth", block: "start" });
+        });
+        li.appendChild(link); outlineEl.appendChild(li);
+      });
+      outlineEl.dataset.built = "true";
+    }
   };
   const updateSelectionHighlights = () => {
     document.querySelectorAll(".location-box").forEach(box => box.classList.toggle("is-selected-location", box.dataset.location === activeLocationSelection));
@@ -512,6 +539,9 @@ function initializeDynamicLegend() {
     localStorage.setItem("story-atlas-theme", darkModeToggle.checked ? "dark" : "light");
   });
   const hideUnchangedToggle = document.getElementById("show-unchanged-locations");
+  const applyNotesVisibility = () => document.querySelectorAll(".step-notes").forEach(el => { el.hidden = !showNotesLabels?.checked; });
+  showNotesLabels?.addEventListener("change", () => { saveLayout(); applyNotesVisibility(); });
+  applyNotesVisibility();
   const applyUnchangedFilter = () => {
     document.querySelectorAll(".location-row").forEach(row => {
       const boxes = [...row.querySelectorAll(".location-box")];
@@ -525,6 +555,7 @@ function initializeDynamicLegend() {
     applyUnchangedFilter();
     hideUnchangedToggle.addEventListener("change", () => { saveLayout(); applyUnchangedFilter(); });
   }
+  standardizeWidths?.addEventListener("change", () => { saveLayout(); applyViewerSorts(); });
   [locationSort, characterSort, showAllAvailable].forEach(control => {
     control?.addEventListener("change", () => { saveLayout(); applyViewerSorts(); updateLegend(); });
   });
