@@ -379,6 +379,7 @@ body {
 .timeline-step { width: 100%; }
 .location-row { justify-content: center; }
 .timeline-legend {
+  box-sizing: border-box;
   grid-column: 2;
   grid-row: 2;
   position: sticky;
@@ -795,7 +796,7 @@ body {
   top: calc(var(--site-header-height) + 16px);
   align-self: start;
   width: auto;
-  max-height: calc(100vh - var(--site-header-height) - 32px);
+  max-height: calc(100vh - var(--site-header-height) - 52px);
   margin: 18px 18px 18px 0;
   padding: 15px;
   border-radius: 12px;
