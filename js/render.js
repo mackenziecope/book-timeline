@@ -314,22 +314,19 @@ function initializeDynamicLegend() {
   };
   const locationSort = document.getElementById("location-sort");
   const characterSort = document.getElementById("character-sort");
-  const showLocationList = document.getElementById("show-location-list");
-  const showCharacterList = document.getElementById("show-character-list");
+  const showAllAvailable = document.getElementById("show-all-available");
   const settingsKey = "story-atlas-layout-" + storyKey;
   let savedLayout = {};
   try { savedLayout = JSON.parse(localStorage.getItem(settingsKey) || "{}"); } catch {}
   if (locationSort) locationSort.value = savedLayout.locationSort || "plot";
   if (characterSort) characterSort.value = savedLayout.characterSort || "plot";
-  if (showLocationList) showLocationList.checked = savedLayout.showLocationList === true;
-  if (showCharacterList) showCharacterList.checked = savedLayout.showCharacterList === true;
+  if (showAllAvailable) showAllAvailable.checked = savedLayout.showAllAvailable === true;
   const saveLayout = () => {
     savedLayout = {
       ...savedLayout,
       locationSort: locationSort?.value || "plot",
       characterSort: characterSort?.value || "plot",
-      showLocationList: !!showLocationList?.checked,
-      showCharacterList: !!showCharacterList?.checked,
+      showAllAvailable: !!showAllAvailable?.checked,
       showUnchanged: !!hideUnchangedToggle?.checked
     };
     localStorage.setItem(settingsKey, JSON.stringify(savedLayout));
@@ -367,21 +364,23 @@ function initializeDynamicLegend() {
     });
   };
   const updateLegend = () => {
-    const visibleBoxes = [...document.querySelectorAll(".location-box:not([hidden])")].filter(isVisible);
-    const visibleBadges = [...document.querySelectorAll(".location-box:not([hidden]) .hex:not(.rip)")].filter(isVisible);
-    const locations = sortLocations([...new Map(visibleBoxes.map(el => [el.dataset.location, el])).values()]);
-    const characters = sortCharacters([...new Map(visibleBadges.map(el => [el.dataset.character, el])).entries()]);
+    const availableBoxes = [...document.querySelectorAll(".location-box:not([hidden])")];
+    const availableBadges = [...document.querySelectorAll(".location-box:not([hidden]) .hex:not(.rip)")];
+    const sourceBoxes = showAllAvailable?.checked ? availableBoxes : availableBoxes.filter(isVisible);
+    const sourceBadges = showAllAvailable?.checked ? availableBadges : availableBadges.filter(isVisible);
+    const locations = sortLocations([...new Map(sourceBoxes.map(el => [el.dataset.location, el])).values()]);
+    const characters = sortCharacters([...new Map(sourceBadges.map(el => [el.dataset.character, el])).entries()]);
     legend.hidden = locations.length === 0 && characters.length === 0;
     countEl.textContent = locations.length + " places · " + characters.length + " people";
     locationsEl.replaceChildren();
-    locationsEl.hidden = !showLocationList?.checked;
-    if (locations.length && !locationsEl.hidden) {
+    locationsEl.hidden = false;
+    if (locations.length) {
       const heading = document.createElement("h3"); heading.textContent = "Locations"; locationsEl.appendChild(heading);
       locations.forEach(el => addLegendItem(locationsEl, el.dataset.location, "", el.dataset.locationColor, "square", "location", el.dataset.location));
     }
     charactersEl.replaceChildren();
-    charactersEl.hidden = !showCharacterList?.checked;
-    if (characters.length && !charactersEl.hidden) {
+    charactersEl.hidden = false;
+    if (characters.length) {
       const heading = document.createElement("h3"); heading.textContent = "Characters"; charactersEl.appendChild(heading);
       characters.forEach(([code, el]) => {
         addLegendItem(charactersEl, el.dataset.characterName || CHARACTER_NAMES[code] || code, code, el.style.backgroundColor, "hex", "character", code);
@@ -472,7 +471,7 @@ function initializeDynamicLegend() {
     applyUnchangedFilter();
     hideUnchangedToggle.addEventListener("change", () => { saveLayout(); applyUnchangedFilter(); });
   }
-  [locationSort, characterSort, showLocationList, showCharacterList].forEach(control => {
+  [locationSort, characterSort, showAllAvailable].forEach(control => {
     control?.addEventListener("change", () => { saveLayout(); updateLegend(); });
   });
   let scheduled = false;

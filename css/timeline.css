@@ -778,9 +778,8 @@ body {
   grid-row: 2;
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(250px, 300px);
-  align-items: stretch;
+  align-items: start;
   min-width: 0;
-  min-height: 0;
   width: 100%;
 }
 #timeline-map {
@@ -791,16 +790,17 @@ body {
 }
 .timeline-step { max-width: 1120px; margin-inline: auto; }
 .timeline-legend {
-  grid-column: 2;
-  grid-row: 1;
-  position: sticky;
-  top: calc(var(--site-header-height) + 16px);
-  align-self: stretch;
-  width: auto;
-  min-height: 0;
+  position: fixed;
+  top: calc(var(--site-header-height) + 18px);
+  right: 18px;
+  bottom: 18px;
+  z-index: 15;
+  width: min(264px, calc(100vw - 36px));
   max-height: none;
+  min-height: 0;
   overflow-y: auto;
-  margin: 18px 18px 18px 0;
+  overscroll-behavior: contain;
+  margin: 0;
   padding: 15px;
   border-radius: 12px;
 }
@@ -837,6 +837,8 @@ body {
     order: 0;
     position: sticky;
     top: var(--site-header-height);
+    right: auto;
+    bottom: auto;
     width: 100%;
     max-height: min(32vh, 300px);
     margin: 0;
