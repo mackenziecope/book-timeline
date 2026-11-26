@@ -3,7 +3,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Timeline Viewer</title>
+  <title>Story Atlas</title>
+  <meta name="theme-color" content="#24394b">
+  <meta name="description" content="Explore character movements and story timelines through interactive location maps.">
+  <link rel="icon" type="image/svg+xml" href="assets/story-atlas.svg">
   <link rel="stylesheet" href="css/timeline.css">
   <link id="story-stylesheet" rel="stylesheet" href="css/throne-of-glass.css">
 </head>
@@ -11,21 +14,32 @@
   <header class="site-header">
     <div class="header-inner">
       <div class="header-title">
-        <p class="eyebrow">Story atlas</p>
+        <a class="brand" href="./" aria-label="Story Atlas home">
+          <img src="assets/story-atlas.svg" alt="">
+          <span>Story Atlas</span>
+        </a>
         <h1 id="timeline-heading" class="timeline-title">A Logistical Record of Throne of Glass</h1>
       </div>
       <nav id="story-nav" aria-label="Choose a timeline"></nav>
     </div>
   </header>
-  <aside id="timeline-legend" class="timeline-legend" aria-live="polite" aria-label="Visible timeline legend" hidden>
+  <aside id="timeline-legend" class="timeline-legend" aria-live="polite" aria-label="Timeline key" hidden>
     <div class="legend-heading">
-      <strong>In view</strong>
+      <div>
+        <p class="legend-kicker">Field guide</p>
+        <strong>In this scene</strong>
+      </div>
       <span id="legend-count"></span>
     </div>
     <div id="legend-locations" class="legend-section"></div>
     <div id="legend-characters" class="legend-section"></div>
   </aside>
   <main id="timeline-map"></main>
+  <footer class="site-footer">
+    <span>Story Atlas</span>
+    <span>Created by <strong>Mackenzie Cope</strong></span>
+    <a href="https://github.com/mackenziecope/book-timeline" target="_blank" rel="noopener noreferrer">View source on GitHub</a>
+  </footer>
 
   <script src="js/papaparse.min.js"></script>
   <script src="js/stories.js"></script>
