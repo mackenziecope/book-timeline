@@ -1417,3 +1417,17 @@ body { grid-template-rows: auto minmax(0, 1fr); }
   .legend-heading { padding: 8px 12px; }
   .selection-toolbar { padding: 4px 12px; }
 }
+
+
+
+/* Quick guide content */
+.legend-guide-panel { color: var(--atlas-ink); line-height: 1.5; }
+.guide-intro { padding: 8px 2px 14px; border-bottom: 1px solid var(--atlas-line); }
+.guide-intro h2 { margin: 3px 0 7px; font-family: Georgia, "Times New Roman", serif; font-size: 1.15rem; line-height: 1.25; }
+.guide-intro p, .guide-section p { margin: 0 0 9px; color: var(--atlas-muted); font-size: .8rem; }
+.guide-intro p:last-child, .guide-section p:last-child { margin-bottom: 0; }
+.guide-eyebrow { margin: 0 !important; color: var(--atlas-muted); font-size: .66rem !important; font-weight: 750; letter-spacing: .1em; text-transform: uppercase; }
+.guide-section { padding: 13px 2px; border-bottom: 1px solid var(--atlas-line); }
+.guide-section h3 { margin: 0 0 6px; font-size: .82rem; font-weight: 750; }
+.guide-tip { margin: 13px 2px 5px; padding: 10px 11px; border-left: 3px solid var(--atlas-accent, #8b261d); border-radius: 0 6px 6px 0; background: rgba(139,38,29,.07); color: var(--atlas-ink); font-size: .76rem; }
+.dark-mode .guide-tip { background: rgba(213,185,142,.1); }
