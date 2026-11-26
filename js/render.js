@@ -274,8 +274,6 @@ function initializeDynamicLegend() {
     if (characters.length) {
       const heading = document.createElement("h3"); heading.textContent = "Characters"; charactersEl.appendChild(heading);
       characters.forEach(([code, el]) => {
-        const factionKey = el.dataset.faction || "neutral";
-        const factionLabel = FACTIONS[factionKey]?.label || (factionKey === "neutral" ? "No faction assigned" : factionKey);
         addLegendItem(charactersEl, el.dataset.characterName || CHARACTER_NAMES[code] || code, code, el.style.backgroundColor, "hex", "character", code);
       });
     }
