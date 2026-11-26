@@ -793,11 +793,15 @@ body {
   position: fixed;
   top: calc(var(--site-header-height) + 18px);
   right: 18px;
-  bottom: 18px;
+  bottom: auto;
   z-index: 15;
   width: min(264px, calc(100vw - 36px));
-  max-height: none;
+  height: calc(100vh - var(--site-header-height) - 36px);
+  height: calc(100dvh - var(--site-header-height) - 36px);
+  max-height: calc(100vh - var(--site-header-height) - 36px);
+  max-height: calc(100dvh - var(--site-header-height) - 36px);
   min-height: 0;
+  overflow-x: hidden;
   overflow-y: auto;
   overscroll-behavior: contain;
   margin: 0;
