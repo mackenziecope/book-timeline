@@ -38,14 +38,15 @@
           <strong>In this scene</strong>
         </div>
         <div class="legend-controls">
-          <span id="legend-count"></span>
+          
           <button id="clear-selection" type="button" hidden>Clear</button>
         </div>
       </div>
+      <div class="legend-heading-actions"><button id="legend-settings-toggle" class="legend-settings-toggle" type="button" aria-label="Open field guide settings" title="Settings" aria-expanded="false" aria-controls="panel-settings"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8Z"/><path d="m19 13 2 1-2 3-2-1-2 1v2h-4v-2l-2-1-2 1-2-3 2-1v-2l-2-1 2-3 2 1 2-1V5h4v2l2 1 2-1 2 3-2 1z"/></svg></button></div>
       <div class="legend-tabs" role="tablist" aria-label="Field Guide">
-        <button class="legend-tab is-active" id="tab-characters" type="button" role="tab" aria-label="Characters" title="Characters" aria-selected="true" aria-controls="panel-characters" data-tab="characters"><span class="legend-tab-icon" aria-hidden="true">♟</span><span id="legend-character-count" class="legend-tab-count"></span></button>
-        <button class="legend-tab" id="tab-locations" type="button" role="tab" aria-label="Locations" title="Locations" aria-selected="false" aria-controls="panel-locations" data-tab="locations" tabindex="-1"><span class="legend-tab-icon" aria-hidden="true">⌖</span><span id="legend-location-count" class="legend-tab-count"></span></button>
-        <button class="legend-tab" id="tab-settings" type="button" role="tab" aria-label="Settings" title="Settings" aria-selected="false" aria-controls="panel-settings" data-tab="settings" tabindex="-1"><span class="legend-tab-icon" aria-hidden="true">⚙</span></button>
+        <button class="legend-tab is-active" id="tab-characters" type="button" role="tab" aria-label="Characters" title="Characters" aria-selected="true" aria-controls="panel-characters" data-tab="characters"><svg class="legend-tab-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8" r="3"/><path d="M3 20c.5-4 2.5-6 6-6s5.5 2 6 6M16 8a2.5 2.5 0 0 1 0 5M17 15c2 .5 3 2 3.5 5"/></svg><span id="legend-character-count" class="legend-tab-count"></span></button>
+        <button class="legend-tab" id="tab-locations" type="button" role="tab" aria-label="Locations" title="Locations" aria-selected="false" aria-controls="panel-locations" data-tab="locations" tabindex="-1"><svg class="legend-tab-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 10c0 5-8 12-8 12S4 15 4 10a8 8 0 1 1 16 0Z"/><circle cx="12" cy="10" r="2.5"/></svg><span id="legend-location-count" class="legend-tab-count"></span></button>
+        <button class="legend-tab" id="tab-outline" type="button" role="tab" aria-label="Outline" title="Chapter outline" aria-selected="false" aria-controls="panel-outline" data-tab="outline" tabindex="-1"><svg class="legend-tab-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5h12M8 12h12M8 19h12M3 5h.01M3 12h.01M3 19h.01"/></svg></button>
       </div>
       <div class="legend-panels">
         <section class="legend-panel" id="panel-characters" role="tabpanel" aria-labelledby="tab-characters">
@@ -54,7 +55,8 @@
         <section class="legend-panel" id="panel-locations" role="tabpanel" aria-labelledby="tab-locations" hidden>
           <div id="legend-locations" class="legend-section"></div>
         </section>
-        <section class="legend-panel" id="panel-settings" role="tabpanel" aria-labelledby="tab-settings" hidden>
+        <section class="legend-panel" id="panel-outline" role="tabpanel" aria-labelledby="tab-outline" hidden><ol id="legend-outline" class="legend-outline"></ol></section>
+        <section class="legend-panel legend-settings-panel" id="panel-settings" aria-label="Field guide settings" hidden>
           <div class="legend-settings-options">
             <label class="legend-setting">
               <input id="show-unchanged-locations" type="checkbox">
@@ -77,6 +79,8 @@
                 <option value="alphabetical">Alphabetical</option>
               </select>
             </label>
+            <label class="legend-setting"><input id="show-notes-labels" type="checkbox" checked><span>Show notes labels</span></label>
+            <label class="legend-setting"><input id="standardize-location-widths" type="checkbox"><span>Standardize location block widths</span></label>
             <label class="legend-setting">
               <input id="show-all-available" type="checkbox">
               <span>Show all available places and characters</span>
