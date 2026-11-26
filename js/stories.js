@@ -42,7 +42,7 @@ const STORIES = {
   "potc": {
     title: "Pirates of the Caribbean Timeline",
     heading: "A Logistical Record of Pirates of the Caribbean",
-    stylesheet: "",
+    stylesheet: "css/potc.css",
     sheets: buildSheetUrls(
       "https://docs.google.com/spreadsheets/d/e/2PACX-1vRm2A7AjU24PenOMYQ6Zokr3qIsBqQjJFcbkvLfPX2Bm3Ir6GTcs9V6YgpQ0nG3btyKX3H4dIWkPK57/pub",
       {
