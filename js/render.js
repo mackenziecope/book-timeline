@@ -12,6 +12,8 @@ const renderedDeaths = new Set();
 const locationColorOrder = [];
 const characterColorOrder = [];
 const locationColorMap = {};
+const locationFactionMap = {};
+const locationFactionColorIndex = {};
 const characterColorMap = {};
 const activeCharacterSelections = new Set();
 let activeLocationSelection = null;
@@ -33,8 +35,18 @@ function generatedColor(index, saturation, lightness) {
 }
 function getLocationColor(location) {
   if (!locationColorMap[location]) {
-    locationColorOrder.push(location);
-    locationColorMap[location] = generatedColor(locationColorOrder.length - 1, 42, 82);
+    const factionKey = locationFactionMap[normalizeLocationKey(location)];
+    const factionHue = hexToHue(FACTIONS[factionKey]?.color);
+    if (factionKey && factionHue !== null) {
+      const index = locationFactionColorIndex[factionKey] || 0;
+      locationFactionColorIndex[factionKey] = index + 1;
+      const saturation = 48 + (index % 3) * 6;
+      const lightness = 48 + (index % 4) * 7;
+      locationColorMap[location] = `hsl(${factionHue.toFixed(1)} ${saturation}% ${lightness}%)`;
+    } else {
+      locationColorOrder.push(location);
+      locationColorMap[location] = generatedColor(locationColorOrder.length - 1, 42, 82);
+    }
   }
   return locationColorMap[location];
 }
@@ -115,8 +127,14 @@ document.addEventListener("DOMContentLoaded", () => {
       const name = String(rawName).trim();
       const key = normalizeLocationKey(name);
       locationRowOrderMap[key] = rowIndex;
+      const rawFaction = getCsvField(row, "default_faction")
+        || getCsvField(row, "default faction")
+        || getCsvField(row, "faction");
+      const factionKey = String(rawFaction || "").trim().toLowerCase();
+      if (factionKey) locationFactionMap[key] = factionKey;
       const suppliedColor = String(getCsvField(row, "hex") || getCsvField(row, "color") || "").trim();
-      if (/^#?(?:[0-9a-f]{3}|[0-9a-f]{6})$/i.test(suppliedColor)) {
+      const hasFactionColor = factionKey && hexToHue(FACTIONS[factionKey]?.color) !== null;
+      if (!hasFactionColor && /^#?(?:[0-9a-f]{3}|[0-9a-f]{6})$/i.test(suppliedColor)) {
         locationColorMap[name] = suppliedColor.startsWith("#") ? suppliedColor : "#" + suppliedColor;
       }
       const suppliedOrder = String(getCsvField(row, "order") ?? "").trim();
