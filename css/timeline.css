@@ -236,6 +236,7 @@ body {
    FLOATING DYNAMIC LEGEND
    ========================= */
 .timeline-legend {
+  box-sizing: border-box;
   position: fixed;
   right: 16px;
   bottom: 16px;
@@ -795,7 +796,7 @@ body {
   top: calc(var(--site-header-height) + 16px);
   align-self: start;
   width: auto;
-  max-height: calc(100vh - var(--site-header-height) - 32px);
+  max-height: calc(100vh - var(--site-header-height) - 52px);
   margin: 18px 18px 18px 0;
   padding: 15px;
   border-radius: 12px;
