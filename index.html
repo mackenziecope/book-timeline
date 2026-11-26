@@ -8,8 +8,23 @@
   <link id="story-stylesheet" rel="stylesheet" href="css/throne-of-glass.css">
 </head>
 <body>
-  <nav id="story-nav" aria-label="Choose a timeline"></nav>
-  <h1 id="timeline-heading" class="timeline-title">A Logistical Record of Throne of Glass</h1>
+  <header class="site-header">
+    <div class="header-inner">
+      <div class="header-title">
+        <p class="eyebrow">Story atlas</p>
+        <h1 id="timeline-heading" class="timeline-title">A Logistical Record of Throne of Glass</h1>
+      </div>
+      <nav id="story-nav" aria-label="Choose a timeline"></nav>
+    </div>
+  </header>
+  <aside id="timeline-legend" class="timeline-legend" aria-live="polite" aria-label="Visible timeline legend" hidden>
+    <div class="legend-heading">
+      <strong>In view</strong>
+      <span id="legend-count"></span>
+    </div>
+    <div id="legend-locations" class="legend-section"></div>
+    <div id="legend-characters" class="legend-section"></div>
+  </aside>
   <main id="timeline-map"></main>
 
   <script src="js/papaparse.min.js"></script>
