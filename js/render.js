@@ -5,7 +5,6 @@ const storyKey = params.get("story") || DEFAULT_STORY_KEY;
 const activeStory = STORIES[storyKey] || STORIES[DEFAULT_STORY_KEY];
 
 let FACTIONS = {};
-let LOCATION_DEFAULT_FACTIONS = {};
 const DEFAULT_FACTION = activeStory.defaultFactions || {};
 const FACTION_OVERRIDES = activeStory.factionOverrides || {};
 const BOOK_LABELS = activeStory.bookLabels || {};
@@ -21,8 +20,6 @@ const CHARACTER_NAMES = {};
 const CHARACTER_FACTIONS = {};
 const firstStepPerBook = {};
 let prevStepLocations = {};
-const locationCharacters = {};
-let refreshMapSelection = () => {};
 
 function getFaction(character, stepId) {
   return FACTION_OVERRIDES[stepId]?.[character] || CHARACTER_FACTIONS[character] || DEFAULT_FACTION[character] || "neutral";
@@ -72,7 +69,6 @@ function applyStoryMetadata() {
 
 document.addEventListener("DOMContentLoaded", () => {
   applyStoryMetadata();
-  initializeStoryMap();
   const { timeline, characters, factions, locations } = activeStory.sheets;
   Promise.all([
     fetch(timeline).then(res => res.text()),
@@ -93,7 +89,6 @@ document.addEventListener("DOMContentLoaded", () => {
     locationsParsed.data.forEach(row => {
       if (!row.Location) return;
       const name = row.Location.trim();
-      if (row.default_faction) LOCATION_DEFAULT_FACTIONS[name] = row.default_faction.trim().toLowerCase();
       const suppliedColor = (row.hex || row.color || "").trim();
       if (/^#?(?:[0-9a-f]{3}|[0-9a-f]{6})$/i.test(suppliedColor)) {
         locationColorMap[name] = suppliedColor.startsWith("#") ? suppliedColor : "#" + suppliedColor;
@@ -108,7 +103,6 @@ document.addEventListener("DOMContentLoaded", () => {
       if (faction) CHARACTER_FACTIONS[code] = faction.trim().toLowerCase();
     });
     renderTimeline(timelineParsed.data);
-    renderMapCharacterBadges();
     initializeDynamicLegend();
   });
 });
@@ -138,17 +132,16 @@ function renderTimeline(data) {
         if (!e.trim()) finalEntries.push("");
         else finalEntries.push(sortedChars[charIndex++]);
       });
-      currentStepLocations[field] = { chars: [...chars].sort() };
+      const normalizedChars = [...chars].sort();
+      currentStepLocations[field] = { chars: normalizedChars };
       if (!chars.length) return;
-      if (!locationCharacters[field]) locationCharacters[field] = new Set();
-      chars.forEach(code => locationCharacters[field].add(code));
       const prev = prevStepLocations[field] || { chars: [] };
-      const charsChanged = prev.chars.join(",") !== chars.join(",");
+      const charsChanged = prev.chars.join(",") !== normalizedChars.join(",");
       const isFirstAppearance = !prevStepLocations[field];
-      if (!isFirstAppearance && !charsChanged) return;
 
       const box = document.createElement("div");
       box.className = "location-box";
+      if (!isFirstAppearance && !charsChanged) box.classList.add("is-unchanged");
       box.dataset.location = field;
       box.tabIndex = 0;
       box.setAttribute("role", "button");
@@ -217,117 +210,6 @@ function renderTimeline(data) {
   });
 }
 
-function initializeStoryMap() {
-  const config = activeStory.map;
-  const panel = document.getElementById("story-map-panel");
-  if (!config || !panel) return;
-  panel.hidden = false;
-  document.body.classList.add("has-story-map");
-  document.getElementById("story-map-title").textContent = config.title || "Story map";
-  const creditEl = document.getElementById("story-map-credit");
-  if (creditEl) creditEl.textContent = config.attribution || "";
-  const image = document.getElementById("story-map-image");
-  image.src = config.image;
-  image.alt = "Map of " + (config.title || "the story world");
-  image.addEventListener("error", () => {
-    panel.classList.add("map-image-missing");
-    document.getElementById("story-map-help").textContent = "The configured map image could not be loaded. The interactive location layer is still available once the image path is corrected.";
-  }, { once: true });
-
-  const viewport = document.getElementById("story-map-viewport");
-  const canvas = document.getElementById("story-map-canvas");
-  const markerLayer = document.getElementById("story-map-markers");
-  let scale = 1, offsetX = 0, offsetY = 0, dragging = false, startX = 0, startY = 0, originX = 0, originY = 0;
-  const applyTransform = () => { canvas.style.transform = `translate(${offsetX}px, ${offsetY}px) scale(${scale})`; };
-  const zoom = factor => { scale = Math.max(1, Math.min(4, scale * factor)); if (scale === 1) offsetX = offsetY = 0; applyTransform(); };
-  document.getElementById("map-zoom-in").addEventListener("click", () => zoom(1.35));
-  document.getElementById("map-zoom-out").addEventListener("click", () => zoom(1 / 1.35));
-  document.getElementById("map-reset").addEventListener("click", () => { scale = 1; offsetX = offsetY = 0; applyTransform(); });
-  viewport.addEventListener("wheel", event => { if (!event.ctrlKey && !event.metaKey) return; event.preventDefault(); zoom(event.deltaY < 0 ? 1.12 : 1 / 1.12); }, { passive: false });
-  viewport.addEventListener("pointerdown", event => {
-    if (event.target.closest(".map-location-marker, .map-character-badge")) return;
-    dragging = true; startX = event.clientX; startY = event.clientY; originX = offsetX; originY = offsetY;
-    viewport.classList.add("is-dragging"); viewport.setPointerCapture(event.pointerId);
-  });
-  viewport.addEventListener("pointermove", event => {
-    if (!dragging) return;
-    offsetX = originX + event.clientX - startX; offsetY = originY + event.clientY - startY; applyTransform();
-  });
-  const stopDrag = () => { dragging = false; viewport.classList.remove("is-dragging"); };
-  viewport.addEventListener("pointerup", stopDrag);
-  viewport.addEventListener("pointercancel", stopDrag);
-  config.locations.forEach(location => {
-    const marker = document.createElement("button");
-    marker.type = "button";
-    marker.className = "map-location-marker";
-    marker.dataset.location = location.name;
-    marker.style.left = location.x + "%";
-    marker.style.top = location.y + "%";
-    marker.style.setProperty("--marker-color", getLocationColor(location.name));
-    marker.title = location.name;
-    marker.setAttribute("aria-label", "Select " + location.name);
-    const label = document.createElement("span");
-    label.className = "map-marker-label";
-    label.textContent = location.name;
-    marker.appendChild(label);
-    marker.addEventListener("click", () => selectLocation(location.name));
-    markerLayer.appendChild(marker);
-  });
-  refreshMapSelection = () => {
-    markerLayer.querySelectorAll(".map-location-marker").forEach(marker => {
-      const selected = marker.dataset.location === activeLocationSelection;
-      marker.classList.toggle("is-selected", selected);
-      marker.setAttribute("aria-pressed", String(selected));
-    });
-  };
-  function selectLocation(name) {
-    activeLocationSelection = activeLocationSelection === name ? null : name;
-    activeCharacterSelections.clear();
-    updateSelectionHighlights();
-  }
-  function updateSelectionHighlights() {
-    document.querySelectorAll(".location-box").forEach(box => box.classList.toggle("is-selected-location", box.dataset.location === activeLocationSelection));
-    document.querySelectorAll(".location-box .hex:not(.rip)").forEach(badge => {
-      badge.classList.toggle("is-selected-character", activeCharacterSelections.has(badge.dataset.character));
-      badge.classList.toggle("is-dimmed-character", activeCharacterSelections.size > 0 && !activeCharacterSelections.has(badge.dataset.character));
-    });
-    document.querySelectorAll(".legend-item[data-type]").forEach(item => {
-      const selected = item.dataset.type === "character" ? activeCharacterSelections.has(item.dataset.key) : activeLocationSelection === item.dataset.key;
-      item.classList.toggle("is-selected", selected);
-      item.setAttribute("aria-pressed", String(selected));
-    });
-    document.getElementById("clear-selection").hidden = activeCharacterSelections.size === 0 && !activeLocationSelection;
-    refreshMapSelection();
-  }
-  window.updateStoryMapSelection = updateSelectionHighlights;
-}
-
-function renderMapCharacterBadges() {
-  const layer = document.getElementById("story-map-markers");
-  if (!layer) return;
-  layer.querySelectorAll(".map-location-marker").forEach(marker => {
-    const people = [...(locationCharacters[marker.dataset.location] || [])];
-    if (!people.length) return;
-    const cluster = document.createElement("span");
-    cluster.className = "map-character-cluster";
-    people.slice(0, 5).forEach(code => {
-      const badge = document.createElement("span");
-      badge.className = "map-character-badge";
-      badge.textContent = code;
-      badge.style.backgroundColor = FACTIONS[getFaction(code)]?.color || getCharacterColor(code);
-      badge.title = CHARACTER_NAMES[code] || code;
-      cluster.appendChild(badge);
-    });
-    if (people.length > 5) {
-      const more = document.createElement("span");
-      more.className = "map-character-more";
-      more.textContent = "+" + (people.length - 5);
-      cluster.appendChild(more);
-    }
-    marker.appendChild(cluster);
-  });
-}
-
 function initializeDynamicLegend() {
   const legend = document.getElementById("timeline-legend");
   const locationsEl = document.getElementById("legend-locations");
@@ -346,8 +228,8 @@ function initializeDynamicLegend() {
     item.append(swatch, copy); parent.appendChild(item);
   };
   const updateLegend = () => {
-    const visibleBoxes = [...document.querySelectorAll(".location-box")].filter(isVisible);
-    const visibleBadges = [...document.querySelectorAll(".location-box .hex:not(.rip)")].filter(isVisible);
+    const visibleBoxes = [...document.querySelectorAll(".location-box:not([hidden])")].filter(isVisible);
+    const visibleBadges = [...document.querySelectorAll(".location-box:not([hidden]) .hex:not(.rip)")].filter(isVisible);
     const locations = [...new Map(visibleBoxes.map(el => [el.dataset.location, el])).values()];
     const characters = [...new Map(visibleBadges.map(el => [el.dataset.character, el])).entries()];
     legend.hidden = locations.length === 0 && characters.length === 0;
@@ -380,7 +262,6 @@ function initializeDynamicLegend() {
     });
     const clearButton = document.getElementById("clear-selection");
     if (clearButton) clearButton.hidden = activeCharacterSelections.size === 0 && !activeLocationSelection;
-    refreshMapSelection();
   };
   legend.addEventListener("click", event => {
     const item = event.target.closest(".legend-item[data-type]");
@@ -407,6 +288,25 @@ function initializeDynamicLegend() {
   document.getElementById("timeline-map").addEventListener("keydown", event => {
     if ((event.key !== "Enter" && event.key !== " ") || !event.target.matches(".location-box")) return;
     event.preventDefault(); event.target.click();
+  });
+
+
+  const darkModeToggle = document.getElementById("dark-mode-toggle");
+  const savedTheme = localStorage.getItem("story-atlas-theme");
+  document.body.classList.toggle("dark-mode", savedTheme === "dark");
+  if (darkModeToggle) darkModeToggle.checked = savedTheme === "dark";
+  darkModeToggle?.addEventListener("change", () => {
+    document.body.classList.toggle("dark-mode", darkModeToggle.checked);
+    localStorage.setItem("story-atlas-theme", darkModeToggle.checked ? "dark" : "light");
+  });
+  const hideUnchangedToggle = document.getElementById("hide-unchanged-locations");
+  hideUnchangedToggle?.addEventListener("change", () => {
+    document.querySelectorAll(".location-row").forEach(row => {
+      const boxes = [...row.querySelectorAll(".location-box")];
+      boxes.forEach(box => { box.hidden = hideUnchangedToggle.checked && box.classList.contains("is-unchanged"); });
+      row.hidden = boxes.length > 0 && boxes.every(box => box.hidden);
+    });
+    updateLegend();
   });
   let scheduled = false;
   const scheduleUpdate = () => {

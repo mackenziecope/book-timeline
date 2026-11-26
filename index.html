@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Story Atlas</title>
   <meta name="theme-color" content="#24394b">
-  <meta name="description" content="Explore character movements and story timelines through interactive location maps.">
+  <meta name="description" content="Explore character movements and story timelines.">
   <link rel="icon" type="image/svg+xml" href="assets/story-atlas.svg">
   <link rel="stylesheet" href="css/timeline.css">
   <link id="story-stylesheet" rel="stylesheet" href="css/throne-of-glass.css">
@@ -23,27 +23,6 @@
       <nav id="story-nav" aria-label="Choose a timeline"></nav>
     </div>
   </header>
-  <section id="story-map-panel" class="story-map-panel" aria-label="Interactive story map" hidden>
-    <div class="story-map-heading">
-      <div>
-        <p class="map-kicker">Explore the world</p>
-        <h2 id="story-map-title">Story map</h2>
-        <p id="story-map-help">Select a place to highlight it throughout the timeline. Zoom to explore character badges.</p>
-        <p id="story-map-credit" class="map-credit"></p>
-      </div>
-      <div class="map-controls" aria-label="Map controls">
-        <button id="map-zoom-out" type="button" aria-label="Zoom out">−</button>
-        <button id="map-zoom-in" type="button" aria-label="Zoom in">+</button>
-        <button id="map-reset" type="button">Reset</button>
-      </div>
-    </div>
-    <div id="story-map-viewport" class="story-map-viewport" tabindex="0" aria-label="Map. Use plus and minus to zoom, or drag to pan.">
-      <div id="story-map-canvas" class="story-map-canvas">
-        <img id="story-map-image" alt="Map of Erilea" draggable="false">
-        <div id="story-map-markers" class="story-map-markers"></div>
-      </div>
-    </div>
-  </section>
   <aside id="timeline-legend" class="timeline-legend" aria-live="polite" aria-label="Timeline key" hidden>
     <div class="legend-heading">
       <div>
@@ -53,6 +32,19 @@
       <div class="legend-controls">
         <span id="legend-count"></span>
         <button id="clear-selection" type="button" hidden>Clear</button>
+        <details class="legend-settings">
+          <summary>Settings</summary>
+          <div class="legend-settings-options">
+            <label class="legend-setting">
+              <input id="hide-unchanged-locations" type="checkbox">
+              <span>Hide unchanged places</span>
+            </label>
+            <label class="legend-setting">
+              <input id="dark-mode-toggle" type="checkbox">
+              <span>Dark mode</span>
+            </label>
+          </div>
+        </details>
       </div>
     </div>
     <div id="legend-locations" class="legend-section"></div>
