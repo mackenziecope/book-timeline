@@ -487,3 +487,53 @@ body {
   #story-nav a { font-size: .76rem; padding: 7px 10px; }
   .site-footer { flex-direction: column; gap: 6px; }
 }
+
+
+/* =========================
+   INTERACTIVE LEGEND SELECTION
+   ========================= */
+.legend-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+#clear-selection {
+  border: 1px solid #d5c6ae;
+  border-radius: 999px;
+  padding: 4px 8px;
+  color: #72552f;
+  background: #fbf7ef;
+  font-size: .68rem;
+  cursor: pointer;
+}
+#clear-selection:hover { background: #f0e5d3; }
+.legend-item {
+  border: 1px solid transparent;
+  border-radius: 7px;
+  padding: 5px 6px;
+  color: inherit;
+  background: transparent;
+  text-align: left;
+  font: inherit;
+  cursor: pointer;
+}
+.legend-item:hover { background: #f2efe7; }
+.legend-item.is-selected {
+  border-color: #b28b55;
+  background: #f7edda;
+  box-shadow: inset 3px 0 #b28b55;
+}
+.location-box.is-selected-location {
+  outline: 3px solid #b28b55;
+  outline-offset: 3px;
+  box-shadow: 0 0 0 6px rgba(178,139,85,.16);
+  z-index: 4;
+}
+.hex.is-selected-character {
+  outline: 3px solid #2e7480;
+  outline-offset: 2px;
+  filter: brightness(1.18) saturate(1.2);
+  transform: scale(1.16);
+  position: relative;
+  z-index: 5;
+}
