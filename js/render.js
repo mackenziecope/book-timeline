@@ -23,6 +23,11 @@ const locationRowOrderMap = {};
 const locationCharacterCountMap = {};
 const factionOrderMap = {};
 const normalizeLocationKey = location => String(location || "").trim().toLowerCase();
+const compareAlphabetically = (a, b) => {
+  const stripArticle = value => String(value || "").trim().replace(/^the\s+/i, "");
+  return stripArticle(a).localeCompare(stripArticle(b), undefined, { sensitivity: "base" })
+    || String(a || "").localeCompare(String(b || ""), undefined, { sensitivity: "base" });
+};
 const getCsvField = (row, field) => Object.entries(row).find(([key]) => key.trim().toLowerCase() === field.toLowerCase())?.[1];
 const CHARACTER_NAMES = {};
 const CHARACTER_FACTIONS = {};
@@ -393,7 +398,7 @@ function initializeDynamicLegend() {
   const sortLocations = locations => {
     const mode = locationSort?.value || "plot";
     return locations.sort((a, b) => {
-      if (mode === "alphabetical") return a.dataset.location.localeCompare(b.dataset.location);
+      if (mode === "alphabetical") return compareAlphabetically(a.dataset.location, b.dataset.location);
       if (mode === "faction") return compareFaction(a, b);
       if (mode === "count") return (locationCharacterCountMap[b.dataset.location] || 0) - (locationCharacterCountMap[a.dataset.location] || 0)
         || (locationOrderMap[normalizeLocationKey(a.dataset.location)] ?? 999999) - (locationOrderMap[normalizeLocationKey(b.dataset.location)] ?? 999999)
@@ -406,7 +411,7 @@ function initializeDynamicLegend() {
   const sortCharacters = characters => {
     const mode = characterSort?.value || "plot";
     return characters.sort(([codeA, elA], [codeB, elB]) => {
-      if (mode === "alphabetical") return (elA.dataset.characterName || codeA).localeCompare(elB.dataset.characterName || codeB);
+      if (mode === "alphabetical") return compareAlphabetically(elA.dataset.characterName || codeA, elB.dataset.characterName || codeB);
       if (mode === "faction") return (factionOrderMap[elA.dataset.faction] ?? 999999) - (factionOrderMap[elB.dataset.faction] ?? 999999)
         || factionLabel(elA.dataset.faction).localeCompare(factionLabel(elB.dataset.faction))
         || (characterOrderMap[codeA] ?? 999999) - (characterOrderMap[codeB] ?? 999999)
@@ -460,7 +465,7 @@ function initializeDynamicLegend() {
         const li = document.createElement("li");
         const link = document.createElement("a");
         link.href = "#" + step.id;
-        link.textContent = (index + 1) + " - " + step.querySelector(".step-label").textContent.trim();
+        link.textContent = step.querySelector(".step-label").textContent.trim();
         link.addEventListener("click", event => {
           event.preventDefault();
           step.scrollIntoView({ behavior: "smooth", block: "start" });
