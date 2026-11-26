@@ -89,6 +89,15 @@ function applyStoryMetadata() {
   const stylesheetEl = document.getElementById("story-stylesheet");
   if (stylesheetEl && activeStory.stylesheet) stylesheetEl.href = activeStory.stylesheet;
   const navEl = document.getElementById("story-nav");
+  const storyMenuToggle = document.getElementById("story-menu-toggle");
+  if (storyMenuToggle && navEl) {
+    storyMenuToggle.hidden = Object.keys(STORIES).length < 2;
+    storyMenuToggle.addEventListener("click", () => {
+      const expanded = storyMenuToggle.getAttribute("aria-expanded") === "true";
+      storyMenuToggle.setAttribute("aria-expanded", String(!expanded));
+      navEl.classList.toggle("is-open", !expanded);
+    });
+  }
   if (navEl && Object.keys(STORIES).length > 1) {
     navEl.replaceChildren();
     Object.entries(STORIES).forEach(([key, cfg]) => {
@@ -273,13 +282,13 @@ function renderTimeline(data) {
       row.appendChild(box);
     });
     prevStepLocations = currentStepLocations;
-    stepEl.appendChild(row);
     if (step.Notes && step.Notes.trim() !== "") {
       const notesEl = document.createElement("div");
       notesEl.className = "step-notes";
       notesEl.textContent = step.Notes.trim();
       stepEl.appendChild(notesEl);
     }
+    stepEl.appendChild(row);
     container.appendChild(stepEl);
   });
 }
