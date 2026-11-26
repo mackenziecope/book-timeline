@@ -1183,3 +1183,98 @@ body {
 @media (prefers-reduced-motion: no-preference) {
   .legend-group > summary::after { transition: transform 140ms ease; }
 }
+
+
+/* =========================
+   FIELD GUIDE TABS
+   ========================= */
+.legend-content { display: contents; }
+.legend-tabs {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  flex: 0 0 auto;
+  gap: 3px;
+  padding: 8px 10px 0;
+  border-bottom: 1px solid var(--atlas-line);
+  background: rgba(255,255,255,.97);
+}
+.legend-tab {
+  min-width: 0;
+  padding: 10px 5px 11px;
+  border: 0;
+  border-bottom: 3px solid transparent;
+  color: var(--atlas-muted);
+  background: transparent;
+  cursor: pointer;
+  font: inherit;
+  font-size: .76rem;
+  font-weight: 650;
+  white-space: nowrap;
+}
+.legend-tab:hover { color: var(--atlas-ink); background: rgba(114,90,60,.06); }
+.legend-tab.is-active {
+  color: var(--atlas-ink);
+  border-bottom-color: #806344;
+}
+.legend-tab-count {
+  margin-left: 3px;
+  color: var(--atlas-muted);
+  font-size: .68rem;
+  font-weight: 500;
+}
+.legend-panels {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: hidden;
+}
+.legend-panel {
+  height: 100%;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
+  padding: 10px 14px 22px;
+}
+.legend-panel[hidden] { display: none !important; }
+.legend-panel .legend-section { padding-bottom: 10px; }
+.legend-panel .legend-settings-options {
+  position: static;
+  display: grid;
+  width: auto;
+  max-width: none;
+  gap: 14px;
+  margin: 0;
+  padding: 8px 2px 14px;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+.legend-panel .legend-setting { align-items: flex-start; }
+.legend-panel .legend-setting-select {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 6px;
+}
+.legend-panel .legend-setting select { max-width: 100%; }
+.legend-item .legend-detail { overflow: hidden; text-overflow: ellipsis; }
+.legend-tab:focus-visible {
+  outline: 3px solid #b28b55;
+  outline-offset: -3px;
+}
+.dark-mode .legend-tabs {
+  background: rgba(31,44,53,.98);
+  border-color: var(--atlas-line);
+}
+.dark-mode .legend-tab { color: #aab7bd; }
+.dark-mode .legend-tab.is-active { color: #e5e8e8; border-bottom-color: #d5b98e; }
+.dark-mode .legend-tab:hover { color: #fff; background: #2b3b45; }
+.dark-mode .legend-panel .legend-settings-options { background: transparent; }
+
+@media (max-width: 760px) {
+  .legend-tabs { padding: 4px 8px 0; }
+  .legend-tab { padding: 9px 3px 10px; font-size: .72rem; }
+  .legend-panel { padding: 8px 14px 14px; }
+}
