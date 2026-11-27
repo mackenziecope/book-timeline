@@ -1460,3 +1460,56 @@ body { grid-template-rows: auto minmax(0, 1fr); }
   .legend-tabs { padding: 3px 6px 0; gap: 1px; }
   .legend-tab { min-height: 32px; padding: 5px 0; }
 }
+
+/* Issue #81: keep the mobile header compact instead of stacking full-width rows. */
+@media (max-width: 760px) {
+  .header-inner {
+    align-items: center;
+    flex-direction: row;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 8px 12px;
+  }
+
+  .header-title {
+    flex: 1 1 auto;
+    width: auto;
+    min-width: 0;
+    gap: 2px;
+  }
+
+  .brand {
+    gap: 6px;
+    font-size: .92rem;
+  }
+
+  .brand img {
+    width: 24px;
+    height: 24px;
+  }
+
+  .timeline-title {
+    font-size: clamp(.78rem, 2.8vw, .95rem);
+    line-height: 1.15;
+    overflow-wrap: anywhere;
+  }
+
+  .story-switcher {
+    flex: 0 0 auto;
+    width: auto;
+    gap: 0;
+  }
+
+  .story-menu-toggle {
+    gap: 5px;
+    padding: 6px 8px;
+    font-size: .72rem;
+    white-space: nowrap;
+  }
+}
+
+@media (max-width: 380px) {
+  .brand { font-size: .84rem; }
+  .brand img { width: 22px; height: 22px; }
+  .story-menu-toggle { padding: 6px 7px; font-size: .68rem; }
+}
