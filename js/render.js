@@ -122,7 +122,10 @@ document.addEventListener("DOMContentLoaded", () => {
   applyStoryMetadata();
   const { timeline, characters, factions, locations } = activeStory.sheets;
   Promise.all([
-    fetch(timeline).then(res => res.text()),
+    fetch(timeline).then(res => {
+      if (!res.ok) throw new Error("Timeline request failed with status " + res.status);
+      return res.text();
+    }),
     fetchOptionalCsv(characters),
     fetchOptionalCsv(factions),
     fetchOptionalCsv(locations)
@@ -162,13 +165,22 @@ document.addEventListener("DOMContentLoaded", () => {
     characterParsed.data.forEach(row => {
       if (!row.code) return;
       const code = row.code.trim();
-      characterOrderMap[code] = Number(row.order) || 999;
+      const characterOrder = Number(row.order);
+      characterOrderMap[code] = Number.isFinite(characterOrder) ? characterOrder : 999;
       if (row.name) CHARACTER_NAMES[code] = row.name.trim();
       const faction = row.faction || row.default_faction || row.Faction;
       if (faction) CHARACTER_FACTIONS[code] = faction.trim().toLowerCase();
     });
     renderTimeline(timelineParsed.data);
     initializeDynamicLegend();
+  }).catch(error => {
+    console.error("Story Atlas could not load the selected story:", error);
+    if (container) {
+      const message = document.createElement("p");
+      message.className = "load-error";
+      message.textContent = "Unable to load this story right now. Check your connection and refresh the page.";
+      container.replaceChildren(message);
+    }
   });
 });
 
@@ -303,6 +315,7 @@ function initializeDynamicLegend() {
   const legend = document.getElementById("timeline-legend");
   const locationsEl = document.getElementById("legend-locations");
   const charactersEl = document.getElementById("legend-characters");
+  if (!legend || !locationsEl || !charactersEl) return;
   const countEl = document.getElementById("legend-count");
   const locationCountEl = document.getElementById("legend-location-count");
   const characterCountEl = document.getElementById("legend-character-count");
@@ -310,7 +323,6 @@ function initializeDynamicLegend() {
   const settingsToggle = document.getElementById("legend-settings-toggle");
   const outlineEl = document.getElementById("legend-outline");
   const tabPanels = [...legend.querySelectorAll(".legend-panel")];
-  if (!legend || !locationsEl || !charactersEl) return;
   const header = document.querySelector(".site-header");
   const updateHeaderOffset = () => {
     const height = header?.getBoundingClientRect().height || 0;
@@ -388,7 +400,7 @@ function initializeDynamicLegend() {
       standardizeWidths: !!standardizeWidths?.checked,
       showUnchanged: !!hideUnchangedToggle?.checked
     };
-    localStorage.setItem(settingsKey, JSON.stringify(savedLayout));
+    try { localStorage.setItem(settingsKey, JSON.stringify(savedLayout)); } catch {}
   };
   const factionLabel = key => !key || key === "neutral" ? "Unaligned" : (FACTIONS[key]?.label || key);
   const compareFaction = (a, b) => {
@@ -550,12 +562,13 @@ function initializeDynamicLegend() {
 
 
   const darkModeToggle = document.getElementById("dark-mode-toggle");
-  const savedTheme = localStorage.getItem("story-atlas-theme");
+  let savedTheme = null;
+  try { savedTheme = localStorage.getItem("story-atlas-theme"); } catch {}
   document.body.classList.toggle("dark-mode", savedTheme === "dark");
   if (darkModeToggle) darkModeToggle.checked = savedTheme === "dark";
   darkModeToggle?.addEventListener("change", () => {
     document.body.classList.toggle("dark-mode", darkModeToggle.checked);
-    localStorage.setItem("story-atlas-theme", darkModeToggle.checked ? "dark" : "light");
+    try { localStorage.setItem("story-atlas-theme", darkModeToggle.checked ? "dark" : "light"); } catch {}
   });
   const hideUnchangedToggle = document.getElementById("show-unchanged-locations");
   const applyNotesVisibility = () => document.querySelectorAll(".step-notes").forEach(el => { el.hidden = !showNotesLabels?.checked; });
